@@ -3,7 +3,7 @@ en:
     admin:
       site_settings:
         categories:
-          TODO_plugin_name: "Plugin Name"
+          rollmaster: "Rollmaster"
   js:
-    discourse_plugin_name:
+    rollmaster:
       placeholder: placeholder
