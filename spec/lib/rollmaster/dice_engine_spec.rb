@@ -9,7 +9,9 @@ RSpec.describe Rollmaster::DiceEngine do
       result = described_class.roll(*dice_rolls)
 
       expect(result).not_to be_nil
-      expect(result).to be_a(String) # Assuming the result is serialized as a string
+      expect(result).to be_a(Array)
+      expect(result.size).to eq(dice_rolls.size)
+      expect(result.all? { |r| r.is_a?(Hash) }).to be(true)
     end
   end
 
@@ -59,11 +61,11 @@ RSpec.describe Rollmaster::DiceEngine do
   end
 
   xdescribe ".attach_function" do
-    xit "attaches the rollmaster_roll function to the context" do
+    it "attaches the roll function to the context" do
       context = MiniRacer::Context.new
       described_class.attach_function(context)
 
-      result = context.eval("typeof rollmaster_roll")
+      result = context.eval("typeof roll")
       expect(result).to eq("function")
     end
   end

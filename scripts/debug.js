@@ -11,8 +11,8 @@ const { DiceRoller } = require("@dice-roller/rpg-dice-roller");
 
 function roll(...diceRolls) {
   const roller = new DiceRoller();
-  const rolls = roller.roll(...diceRolls);
-  return rolls;
+  roller.roll(...diceRolls);
+  return roller.log;
 }
 
 const r = repl.start({ prompt: "> " });

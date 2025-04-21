@@ -27,8 +27,8 @@ module Rollmaster
       ctx.eval <<~JS
         function roll(...diceRolls) {
           const roller = new rpgDiceRoller.DiceRoller;
-          const rolls = roller.roll(...diceRolls);
-          return rolls
+          roller.roll(...diceRolls);
+          return JSON.parse(JSON.stringify(roller.log))
         }
       JS
     end
