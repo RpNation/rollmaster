@@ -11,6 +11,12 @@ importers:
       '@dice-roller/rpg-dice-roller':
         specifier: ^5.5.1
         version: 5.5.1
+      mathjs:
+        specifier: ^14.2.0
+        version: 14.4.0
+      random-js:
+        specifier: ^2.1.0
+        version: 2.1.0
     devDependencies:
       '@discourse/lint-configs':
         specifier: 2.12.0
