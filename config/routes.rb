@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 Rollmaster::Engine.routes.draw do
-  get "/examples" => "examples#index"
+  get "/roll" => "roll#roll"
   # define routes here
 end
 

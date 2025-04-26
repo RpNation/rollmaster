@@ -13,6 +13,24 @@ RSpec.describe Rollmaster::DiceEngine do
       expect(result.size).to eq(dice_rolls.size)
       expect(result.all? { |r| r.is_a?(Hash) }).to be(true)
     end
+
+    it "raises a RollError for invalid dice rolls" do
+      dice_rolls = ["invalid_roll"]
+
+      expect { described_class.roll(*dice_rolls) }.to raise_error(Rollmaster::DiceEngine::RollError)
+    end
+
+    it "raises a RollError for empty dice rolls" do
+      dice_rolls = []
+
+      expect { described_class.roll(*dice_rolls) }.to raise_error(Rollmaster::DiceEngine::RollError)
+    end
+
+    it "raises a RollError for nil dice rolls" do
+      dice_rolls = nil
+
+      expect { described_class.roll(*dice_rolls) }.to raise_error(Rollmaster::DiceEngine::RollError)
+    end
   end
 
   describe ".reset_context" do
@@ -60,7 +78,7 @@ RSpec.describe Rollmaster::DiceEngine do
     end
   end
 
-  xdescribe ".attach_function" do
+  describe ".attach_function" do
     it "attaches the roll function to the context" do
       context = MiniRacer::Context.new
       described_class.attach_function(context)
