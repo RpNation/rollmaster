@@ -2,8 +2,11 @@
 
 require "mini_racer"
 
-module Rollmaster
+module ::Rollmaster
   class DiceEngine
+    class RollError < StandardError
+    end
+
     @mutex = Mutex.new
     @ctx_init = Mutex.new
     @ctx = nil
@@ -20,6 +23,9 @@ module Rollmaster
         context = v8
         result = context.call("roll", *diceRolls)
       end
+      if result.is_a?(Hash) && result["type"] == "error"
+        raise Rollmaster::DiceEngine::RollError.new(result["msg"])
+      end
       result
     end
 
@@ -27,8 +33,16 @@ module Rollmaster
       ctx.eval <<~JS
         function roll(...diceRolls) {
           const roller = new rpgDiceRoller.DiceRoller;
-          roller.roll(...diceRolls);
-          return JSON.parse(JSON.stringify(roller.log))
+          try {
+            roller.roll(...diceRolls);
+            return JSON.parse(JSON.stringify(roller.log))
+          } catch (e) {
+            return {
+              type: "error",
+              name: e.name,
+              msg: e.message,
+            };
+          }
         }
       JS
     end
