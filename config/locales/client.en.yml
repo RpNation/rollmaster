@@ -6,4 +6,5 @@ en:
           rollmaster: "Rollmaster"
   js:
     rollmaster:
-      placeholder: placeholder
+      bbcode:
+        placeholder: "Rolling: "
