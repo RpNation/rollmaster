@@ -36,10 +36,13 @@ export default class ComposerValidRoll extends Component {
    * @returns {string}
    */
   get raw() {
-    return this.args.composer.reply;
+    return this.args.composer?.reply;
   }
 
   get mayHaveRolls() {
+    if (!this.raw) {
+      return false;
+    }
     const str = this.raw.toLowerCase();
     return str.includes("[roll]") && str.includes("[/roll]");
   }
