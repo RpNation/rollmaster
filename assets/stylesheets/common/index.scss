@@ -1,0 +1,32 @@
+.rollmaster-valid-composer {
+  display: block;
+  position: absolute;
+  right: 0.125em;
+  bottom: 0em;
+  padding: 0.125em;
+
+  svg.svg-roll {
+    --success-mild: color-mix(
+      in srgb,
+      var(--success-medium),
+      rgb(140, 140, 140)
+    );
+    color: var(--success-mild, --success-medium);
+    &:has(~ .rollmaster-spinner) {
+      color: var(--primary-low-mid);
+    }
+
+    &:has(+ .roll__invalid) {
+      color: var(--danger);
+    }
+  }
+
+  svg.roll__invalid {
+    color: var(--danger);
+  }
+}
+
+.rollmaster-spinner {
+  animation: rotate-forever 1s infinite linear;
+  color: var(--primary-low-mid);
+}

@@ -10,6 +10,8 @@
 
 enabled_site_setting :rollmaster_enabled
 
+register_asset "stylesheets/common/index.scss"
+
 module ::Rollmaster
   PLUGIN_NAME = "rollmaster"
 end
@@ -18,6 +20,9 @@ require_relative "lib/rollmaster/engine"
 
 after_initialize do
   # Code which should run after Rails has finished booting
+
+  register_svg_icon "rollmaster-dices"
+
   # I don't think this is needed, but it doesn't hurt to be safe
   ::Rollmaster::DiceEngine.reset_context
 

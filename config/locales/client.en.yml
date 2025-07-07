@@ -6,4 +6,9 @@ en:
           rollmaster: "Rollmaster"
   js:
     rollmaster:
-      placeholder: placeholder
+      bbcode:
+        placeholder: "Rolling: "
+      validator:
+        loading: "validating roll notation..."
+        success: "all roll notations valid"
+        error: "invalid roll notation found"
