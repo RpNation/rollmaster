@@ -94,9 +94,13 @@ export default class ComposerValidRoll extends Component {
         .filter(Boolean);
       rolls.forEach((roll) => {
         try {
+          // TODO: Handle descriptions separately. parser won't be able to handle 2d20+4 // test
+          // see https://github.com/dice-roller/rpg-dice-roller/issues/287
           rpgDiceRoller.Parser.parse(roll);
         } catch (err) {
           this.errors.push(err);
+          // eslint-disable-next-line no-console
+          console.warn("Rollmaster: Error parsing notation", roll, err);
         }
       });
     });

@@ -29,13 +29,32 @@ module ::Rollmaster
       result
     end
 
+    # Formats the notation of the dice rolls.
+    # Note: this does not actually reorder the dice rolls, it just formats them by removing
+    # whitespace and ensuring the notation is valid.
+    def self.format_notation(*diceRolls)
+      result = nil
+      protect do
+        context = v8
+        result = context.call("formatNotation", *diceRolls)
+      end
+      if result.is_a?(Hash) && result["type"] == "error"
+        raise Rollmaster::DiceEngine::RollError.new(result["msg"])
+      end
+      result
+    end
+
     def self.attach_function(ctx)
       ctx.eval <<~JS
         function roll(...diceRolls) {
           const roller = new rpgDiceRoller.DiceRoller;
           try {
             roller.roll(...diceRolls);
-            return JSON.parse(JSON.stringify(roller.log))
+            return roller.log.map((r) => {
+              const output = r.output;
+              const start = output.lastIndexOf(': ');
+              return output.substring(start + 2);
+            });
           } catch (e) {
             return {
               type: "error",
@@ -43,6 +62,48 @@ module ::Rollmaster
               msg: e.message,
             };
           }
+        }
+
+        function formatNotation(...diceRolls) {
+          const parse = rpgDiceRoller.Parser.parse;
+          const formatted = [];
+          try {
+            diceRolls.forEach((notation) => {
+              const parsed = parse(notation);
+              formatted.push(format(parsed));
+            });
+          } catch (e) {
+            return {
+              type: "error",
+              name: e.name,
+              msg: e.message,
+            };
+          }
+          return formatted;
+        }
+
+        function format(expressions) {
+          removeDescription(expressions);
+          return expressions
+            .map((e) => {
+              if (typeof e === "string" || typeof e === "number") {
+                return e;
+              }
+              return e.notation;
+            })
+            .join("");
+        }
+
+        function removeDescription(exp) {
+          exp.forEach((e) => {
+            if (typeof e === "object" && e.description) {
+              e.description = null;
+              if (e.expressions) {
+                e.expressions.forEach((subExp) => removeDescription(subExp));
+              }
+            }
+          });
+          return exp;
         }
       JS
     end
