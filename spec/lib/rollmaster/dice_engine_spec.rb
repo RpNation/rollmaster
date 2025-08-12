@@ -11,7 +11,7 @@ RSpec.describe Rollmaster::DiceEngine do
       expect(result).not_to be_nil
       expect(result).to be_a(Array)
       expect(result.size).to eq(dice_rolls.size)
-      expect(result.all? { |r| r.is_a?(Hash) }).to be(true)
+      expect(result.all? { |r| r.is_a?(String) }).to be(true)
     end
 
     it "raises a RollError for invalid dice rolls" do
@@ -30,6 +30,41 @@ RSpec.describe Rollmaster::DiceEngine do
       dice_rolls = nil
 
       expect { described_class.roll(*dice_rolls) }.to raise_error(Rollmaster::DiceEngine::RollError)
+    end
+  end
+
+  describe ".format_notation" do
+    it "formats the notation of the dice rolls" do
+      dice_rolls = ["{3d8  * 2, 20 /  2d10, 2d10 - d4}     // testing"]
+      formatted_result = described_class.format_notation(*dice_rolls)
+
+      expect(formatted_result).not_to be_nil
+      expect(formatted_result).to be_a(String)
+      expect(formatted_result).to eq("{3d8*2, 20/2d10, 2d10-1d4}") # has stripped whitespace and comments
+    end
+
+    it "raises a RollError for invalid notation" do
+      dice_rolls = ["invalid_notation"]
+
+      expect { described_class.format_notation(*dice_rolls) }.to raise_error(
+        Rollmaster::DiceEngine::RollError,
+      )
+    end
+
+    it "raises a RollError for empty notation" do
+      dice_rolls = []
+
+      expect { described_class.format_notation(*dice_rolls) }.to raise_error(
+        Rollmaster::DiceEngine::RollError,
+      )
+    end
+
+    it "raises a RollError for nil notation" do
+      dice_rolls = nil
+
+      expect { described_class.format_notation(*dice_rolls) }.to raise_error(
+        Rollmaster::DiceEngine::RollError,
+      )
     end
   end
 
