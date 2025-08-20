@@ -26,6 +26,8 @@ after_initialize do
   # I don't think this is needed, but it doesn't hurt to be safe
   ::Rollmaster::DiceEngine.reset_context
 
-  on(:post_process_cooked) { |doc, post| ::Rollmaster::HandleCookedPostProcess.process(doc, post) }
+  on(:before_post_process_cooked) do |doc, post|
+    ::Rollmaster::HandleCookedPostProcess.process(doc, post) if SiteSetting.rollmaster_enabled
+  end
   # TODO: consider :chat_message_processed as well
 end
