@@ -12,3 +12,18 @@ module ::Rollmaster
     validates :result, presence: true
   end
 end
+
+# == Schema Information
+#
+# Table name: rollmaster_rolls
+#
+#  id         :bigint           not null, primary key
+#  post_id    :integer
+#  raw        :string
+#  notation   :string
+#  result     :string
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#
+# Indexes
+#  index_rollmaster_rolls_on_post_id  (post_id)
