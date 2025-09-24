@@ -29,5 +29,6 @@ after_initialize do
   on(:before_post_process_cooked) do |doc, post|
     ::Rollmaster::HandleCookedPostProcess.process(doc, post) if SiteSetting.rollmaster_enabled
   end
+
   # TODO: consider :chat_message_processed as well
 end

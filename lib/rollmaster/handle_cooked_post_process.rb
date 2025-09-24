@@ -44,12 +44,9 @@ module ::Rollmaster
       match_rolls(roll_elements, post) if post.id?
       save_rolls(roll_elements, post)
 
-      p roll_elements
       roll_elements
         .group_by { |e| e[:dom] }
         .each do |dom, rolls|
-          p "\n\n HELLO WORLD \n\n"
-          p dom
           content =
             rolls.map do |e|
               if e[:error]
@@ -60,7 +57,6 @@ module ::Rollmaster
                 e[:raw] + ": " + e[:result] # TODO: consider decorating with spans
               end
             end
-          p content
           dom.content = CGI.unescapeHTML(content.join("\n"))
           dom["data-roll-id"] = rolls.map { |e| e[:id] }.join(",") if rolls.any? { |e| e[:id] }
         end
