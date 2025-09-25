@@ -19,6 +19,7 @@ RSpec.describe "Rollmaster BBCode integration", type: :integration do
     expect(roll).not_to be_nil
     expect(roll.post_id).to eq(post.id)
     expect(roll.raw).to eq("2d6")
+    expect(post.custom_fields[::Rollmaster::POST_CUSTOM_FIELD]).to be(true)
     expect(cpp.html).to include("data-roll-id=\"#{roll.id}\"")
   end
 

@@ -13,7 +13,8 @@ enabled_site_setting :rollmaster_enabled
 register_asset "stylesheets/common/index.scss"
 
 module ::Rollmaster
-  PLUGIN_NAME = "rollmaster"
+  PLUGIN_NAME = "rollmaster".freeze
+  POST_CUSTOM_FIELD = "rollmaster_processed".freeze
 end
 
 require_relative "lib/rollmaster/engine"
@@ -26,8 +27,18 @@ after_initialize do
   # I don't think this is needed, but it doesn't hurt to be safe
   ::Rollmaster::DiceEngine.reset_context
 
+  register_post_custom_field_type(::Rollmaster::POST_CUSTOM_FIELD, :boolean)
+
   on(:before_post_process_cooked) do |doc, post|
     ::Rollmaster::HandleCookedPostProcess.process(doc, post) if SiteSetting.rollmaster_enabled
+  end
+
+  add_to_class(:post, :has_rolls?) { custom_fields[::Rollmaster::POST_CUSTOM_FIELD] || false }
+  add_to_class(:post, :rolls) { ::Rollmaster::Roll.where(post_id: id) if has_rolls? }
+
+  add_to_serializer(:post, :has_rolls?) { object.has_rolls? }
+  add_to_serializer(:post, :rolls) do
+    (object.rolls || []).map { |roll| ::Rollmaster::RollSerializer.new(roll, root: false) }
   end
 
   # TODO: consider :chat_message_processed as well

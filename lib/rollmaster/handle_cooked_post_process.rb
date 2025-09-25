@@ -94,6 +94,8 @@ module ::Rollmaster
     end
 
     def self.save_rolls(rolls, post)
+      post.custom_fields[::Rollmaster::POST_CUSTOM_FIELD] = true
+      post.save_custom_fields
       rolls
         .reject { |r| r[:raw].empty? || r[:error] }
         .each do |roll|

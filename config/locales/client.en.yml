@@ -6,6 +6,8 @@ en:
           rollmaster: "Rollmaster"
   js:
     rollmaster:
+      post:
+        title: "view rolls made in this post"
       bbcode:
         placeholder: "Rolling: "
       validator:
