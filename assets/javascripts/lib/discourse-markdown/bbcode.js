@@ -1,13 +1,16 @@
 import { i18n } from "discourse-i18n";
 
 const ROLL_CLASS = "bb-rollmaster";
-const DATA_DICE = "data-notation";
 
 function applyRollAttrs(state, token, attrs, content) {
   token.attrs = [
     ["class", ROLL_CLASS],
-    [DATA_DICE, content],
+    ["data-notation", content],
   ];
+
+  if (attrs._default) {
+    token.attrs.push(["data-desc", attrs._default]);
+  }
 
   if (content) {
     token = state.push("text", "", 0);

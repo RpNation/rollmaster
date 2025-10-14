@@ -22,6 +22,7 @@ end
 #  raw        :string
 #  notation   :string
 #  result     :string
+#  desc       :string
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
 #

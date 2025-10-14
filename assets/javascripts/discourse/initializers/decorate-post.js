@@ -1,4 +1,6 @@
+import icon from "discourse/helpers/d-icon";
 import { withPluginApi } from "discourse/lib/plugin-api";
+import { sanitize } from "discourse/lib/text";
 import { applyValueTransformer } from "discourse/lib/transformer";
 import RollsPostMenuButton from "../components/rolls-post-menu-button";
 
@@ -11,7 +13,6 @@ function decorateCookedElement(el, helper) {
   const rollElems = el.querySelectorAll(
     ".bb-rollmaster[data-notation][data-roll-id]"
   );
-  console.log(rollElems, rolls);
 
   rollElems.forEach((rollElem) => {
     const rollId = rollElem.getAttribute("data-roll-id");
@@ -19,14 +20,24 @@ function decorateCookedElement(el, helper) {
     if (!roll) {
       return;
     }
-    // todo: add blockquote around roll result
+
     let htmlString = `<blockquote
-   dir="auto"
-   class=".bb-rollmaster-result"
-   data-roll-id="${roll.id}"
-   data-notation="${roll.notation}"
-   data-result="${roll.result}"
- >${roll.result}</blockquote>`;
+  dir="auto"
+  class="bb-rollmaster-result"
+  data-roll-id="${roll.id}"
+  data-desc="${sanitize(roll.desc || "")}"
+  data-notation="${sanitize(roll.notation)}"
+  data-result="${sanitize(roll.result)}"
+>
+  <p class="bb-rollmaster-title">
+    <span class="bb-rollmaster-description">
+      ${icon("rollmaster-dices")}
+      ${sanitize(roll.desc || "Roll")}:
+    </span>
+    <span class="bb-rollmaster-notation">${sanitize(roll.notation)}</span>
+  </p>
+  <p class="bb-rollmaster-results">${roll.result}</p>
+</blockquote>`;
 
     htmlString = applyValueTransformer(
       "rollmaster-cooked-roll-result",
@@ -41,7 +52,6 @@ export default {
   name: "rollmaster-decorate-post",
   initialize() {
     withPluginApi((api) => {
-      api.addValueTransformerName("rollmaster-cooked-roll-result");
       api.decorateCookedElement(decorateCookedElement);
 
       api.registerValueTransformer(

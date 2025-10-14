@@ -30,3 +30,23 @@
   animation: rotate-forever 1s infinite linear;
   color: var(--primary-low-mid);
 }
+
+.bb-rollmaster-result {
+  .bb-rollmaster-title {
+    color: var(--primary-high-or-secondary-low);
+    margin-bottom: 0.25em;
+    font-size: var(--font-down-1);
+
+    .d-icon {
+      display: inline-block;
+      font-size: var(--font-0-rem);
+      margin: auto 0;
+      margin-right: 0.25em;
+    }
+  }
+
+  .bb-rollmaster-results {
+    margin-top: 0.25em;
+    font-family: var(--d-font-family--monospace);
+  }
+}

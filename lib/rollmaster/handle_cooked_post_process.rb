@@ -15,6 +15,7 @@ module ::Rollmaster
         .css(SELECTOR_QUERY)
         .each do |roll_element|
           original_notation = roll_element.attribute("data-notation").value
+          desc = roll_element.attribute("data-desc")&.value
 
           next if original_notation.blank?
 
@@ -22,9 +23,9 @@ module ::Rollmaster
             .split(/\n/)
             .each do |notation|
               if notation.strip.empty?
-                roll_elements << { raw: "", dom: roll_element } # let us keep empty lines
+                roll_elements << { raw: "", dom: roll_element, desc: desc } # let us keep empty lines
               else
-                roll_elements << { raw: notation, dom: roll_element }
+                roll_elements << { raw: notation, dom: roll_element, desc: desc }
               end
             end
           roll_element.content = "" # clear the original notation
@@ -101,7 +102,10 @@ module ::Rollmaster
         .each do |roll|
           if roll[:id]
             existing_roll = Rollmaster::Roll.find(roll[:id])
-            existing_roll.update!(raw: roll[:raw], notation: roll[:formatted])
+            if existing_roll.raw != roll[:raw] || existing_roll.notation != roll[:formatted] ||
+                 existing_roll.desc != roll[:desc]
+              existing_roll.update!(raw: roll[:raw], notation: roll[:formatted], desc: roll[:desc])
+            end
           else
             new_roll =
               Rollmaster::Roll.create!(
@@ -109,6 +113,7 @@ module ::Rollmaster
                 raw: roll[:raw],
                 notation: roll[:formatted],
                 result: roll[:result],
+                desc: roll[:desc],
               )
             roll[:id] = new_roll.id
           end
