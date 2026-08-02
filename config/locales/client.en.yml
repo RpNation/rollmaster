@@ -7,10 +7,18 @@ en:
   js:
     rollmaster:
       post:
-        title: "view rolls made in this post"
+        title: "View roll history"
+        current: "Current"
+        historical: "Historical"
+        notation: "Notation"
+        result: "Result"
+        empty: "No rolls have been saved for this post."
+      revisions:
+        title: "Rolls"
+        empty: "No rolls"
       bbcode:
         placeholder: "Rolling: "
       validator:
-        loading: "validating roll notation..."
-        success: "all roll notations valid"
-        error: "invalid roll notation found"
+        loading: "Validating roll notation..."
+        success: "All roll notations are valid"
+        error: "Invalid roll notation found"

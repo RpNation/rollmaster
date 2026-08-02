@@ -38,7 +38,7 @@ module ::Rollmaster
         notation = element[:raw]
         next if notation.blank?
 
-        element.merge!(process_roll(notation))
+        element.merge!(process_roll(notation, post))
       end
 
       # { raw, dom, formatted, result, error, id }[]
@@ -65,7 +65,7 @@ module ::Rollmaster
       true
     end
 
-    def self.process_roll(notation)
+    def self.process_roll(notation, post)
       begin
         formatted = Rollmaster::DiceEngine.format_notation(notation).first
         final = Rollmaster::DiceEngine.roll(notation).first
@@ -77,7 +77,7 @@ module ::Rollmaster
     end
 
     def self.match_rolls(rolls, post)
-      existing_rolls = Rollmaster::Roll.where(post_id: post.id).to_a
+      existing_rolls = Rollmaster::RollHistory.current_rolls(post)
       return if existing_rolls.empty?
 
       rolls

@@ -12,6 +12,7 @@
       rgb(140, 140, 140)
     );
     color: var(--success-mild, --success-medium);
+
     &:has(~ .rollmaster-spinner) {
       color: var(--primary-low-mid);
     }
@@ -43,6 +44,137 @@
       margin: auto 0;
       margin-right: 0.25em;
     }
+  }
+
+  .rollmaster-roll-history-modal {
+    .d-modal__body {
+      max-height: min(70vh, 40rem);
+      overflow-y: auto;
+    }
+  }
+
+  .rollmaster-roll-history {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .rollmaster-roll-history__entry {
+    border: 1px solid var(--primary-low);
+    border-radius: 0.5rem;
+    padding: 0.875rem;
+    background: var(--secondary);
+  }
+
+  .rollmaster-roll-history__entry-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .rollmaster-roll-history__status {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.125rem 0.5rem;
+    font-size: var(--font-down-1);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .rollmaster-roll-history__status--current {
+    background: var(--success-low);
+    color: var(--success);
+  }
+
+  .rollmaster-roll-history__status--historical {
+    background: var(--primary-low);
+    color: var(--primary-high);
+  }
+
+  .rollmaster-roll-history__timestamp {
+    color: var(--primary-medium);
+    font-size: var(--font-down-1);
+  }
+
+  .rollmaster-roll-history__description {
+    margin: 0 0 0.75rem;
+    color: var(--primary-high);
+  }
+
+  .rollmaster-roll-history__details {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+  }
+
+  .rollmaster-roll-history__detail {
+    display: grid;
+    gap: 0.125rem;
+
+    dt {
+      color: var(--primary-medium);
+      font-size: var(--font-down-1);
+    }
+
+    dd {
+      margin: 0;
+      font-family: var(--d-font-family--monospace);
+    }
+  }
+
+  .rollmaster-roll-history__empty {
+    margin: 0;
+    color: var(--primary-medium);
+  }
+
+  .rollmaster-revision-rolls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: start;
+
+    .revision-content {
+      min-width: 0;
+    }
+  }
+
+  .rollmaster-revision-rolls__heading {
+    margin: 0 0 0.5rem;
+    color: var(--primary-medium);
+    font-size: var(--font-down-1);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .rollmaster-revision-rolls__list {
+    margin: 0;
+    padding-left: 1rem;
+  }
+
+  .rollmaster-revision-rolls__entry {
+    margin-bottom: 0.25rem;
+    font-family: var(--d-font-family--monospace);
+  }
+
+  .rollmaster-revision-rolls__description {
+    font-family: var(--d-font-family);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .rollmaster-revision-rolls__notation,
+  .rollmaster-revision-rolls__result {
+    display: inline;
+  }
+
+  .rollmaster-revision-rolls__result::before {
+    content: ": ";
+  }
+
+  .rollmaster-revision-rolls__empty,
+  .rollmaster-revision-rolls__arrow {
+    margin: 0;
+    color: var(--primary-medium);
   }
 
   .bb-rollmaster-results {
