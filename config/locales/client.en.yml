@@ -18,6 +18,7 @@ en:
         empty: "No rolls"
       bbcode:
         placeholder: "Rolling: "
+        default: "Roll"
       validator:
         loading: "Validating roll notation..."
         success: "All roll notations are valid"

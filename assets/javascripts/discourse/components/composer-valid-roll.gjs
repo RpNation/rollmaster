@@ -4,9 +4,9 @@ import { action } from "@ember/object";
 import didInsert from "@ember/render-modifiers/modifiers/did-insert";
 import didUpdate from "@ember/render-modifiers/modifiers/did-update";
 import { debounce } from "@ember/runloop";
-import icon from "discourse/helpers/d-icon";
 import loadscript from "discourse/lib/load-script";
 import { cook } from "discourse/lib/text";
+import dIcon from "discourse/ui-kit/helpers/d-icon";
 import { i18n } from "discourse-i18n";
 /* global rpgDiceRoller */
 
@@ -117,14 +117,14 @@ export default class ComposerValidRoll extends Component {
         title={{this.title}}
       >
         {{#if this.hasRolls}}
-          {{icon "rollmaster-dices" class="svg-roll"}}
+          {{dIcon "rollmaster-dices" class="svg-roll"}}
           {{#if this.errors.length}}
-            {{icon "triangle-exclamation" class="roll__invalid"}}
+            {{dIcon "triangle-exclamation" class="roll__invalid"}}
           {{/if}}
         {{/if}}
 
         {{#if this.loading}}
-          {{icon "spinner" class="rollmaster-spinner"}}
+          {{dIcon "spinner" class="rollmaster-spinner"}}
         {{/if}}
       </div>
     {{/if}}
