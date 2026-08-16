@@ -45,11 +45,15 @@ const inlineRule = {
 export function setup(helper) {
   helper.allowList(["div.bb-rollmaster", "span.bb-rollmaster"]);
 
-  helper.registerOptions((opts) => {
-    opts.features["rollmaster"] = true;
+  helper.registerOptions((opts, siteSettings) => {
+    opts.features["rollmaster"] = !!siteSettings.rollmaster_enabled;
   });
 
   helper.registerPlugin((md) => {
+    if (!md.options.discourse.features["rollmaster"]) {
+      return;
+    }
+
     md.inline.bbcode.ruler.push("inline-roll", inlineRule);
     md.block.bbcode.ruler.push("block-roll", blockRule);
   });
