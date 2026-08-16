@@ -1,8 +1,39 @@
-import icon from "discourse/helpers/d-icon";
+import { iconElement } from "discourse/lib/icon-library";
 import { withPluginApi } from "discourse/lib/plugin-api";
-import { sanitize } from "discourse/lib/text";
 import { applyValueTransformer } from "discourse/lib/transformer";
 import RollsPostMenuButton from "../components/rolls-post-menu-button";
+
+function rollResultElement(roll) {
+  const result = document.createElement("blockquote");
+  result.dir = "auto";
+  result.className = "bb-rollmaster-result";
+  result.dataset.rollId = roll.id;
+  result.dataset.desc = roll.desc || "";
+  result.dataset.notation = roll.notation;
+  result.dataset.result = roll.result;
+
+  const title = document.createElement("p");
+  title.className = "bb-rollmaster-title";
+
+  const description = document.createElement("span");
+  description.className = "bb-rollmaster-description";
+  description.append(iconElement("rollmaster-dices"));
+  description.append(` ${roll.desc || "Roll"}:`);
+  title.append(description);
+
+  const notation = document.createElement("span");
+  notation.className = "bb-rollmaster-notation";
+  notation.textContent = roll.notation;
+  title.append(notation);
+  result.append(title);
+
+  const rollResult = document.createElement("p");
+  rollResult.className = "bb-rollmaster-results";
+  rollResult.textContent = roll.result;
+  result.append(rollResult);
+
+  return result;
+}
 
 function decorateCookedElement(el, helper) {
   if (!helper?.getModel()?.has_rolls) {
@@ -21,27 +52,9 @@ function decorateCookedElement(el, helper) {
       return;
     }
 
-    let htmlString = `<blockquote
-  dir="auto"
-  class="bb-rollmaster-result"
-  data-roll-id="${roll.id}"
-  data-desc="${sanitize(roll.desc || "")}"
-  data-notation="${sanitize(roll.notation)}"
-  data-result="${sanitize(roll.result)}"
->
-  <p class="bb-rollmaster-title">
-    <span class="bb-rollmaster-description">
-      ${icon("rollmaster-dices")}
-      ${sanitize(roll.desc || "Roll")}:
-    </span>
-    <span class="bb-rollmaster-notation">${sanitize(roll.notation)}</span>
-  </p>
-  <p class="bb-rollmaster-results">${roll.result}</p>
-</blockquote>`;
-
-    htmlString = applyValueTransformer(
+    const htmlString = applyValueTransformer(
       "rollmaster-cooked-roll-result",
-      htmlString,
+      rollResultElement(roll).outerHTML,
       { roll, post: helper.getModel(), helper, element: rollElem }
     );
     rollElem.outerHTML = htmlString;

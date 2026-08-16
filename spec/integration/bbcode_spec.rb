@@ -22,6 +22,18 @@ RSpec.describe "Rollmaster BBCode integration", type: :integration do
     expect(cpp.html).to include("data-roll-id=\"#{roll.id}\"")
   end
 
+  it "renders markup-like dice comments as text" do
+    comment = '<img src=x onerror="alert(1)">'
+    post = Fabricate(:post, raw: "[roll]1d6 // #{comment}[/roll]")
+    post.save
+
+    cpp = process_post(post)
+    document = Nokogiri::HTML5.fragment(cpp.html)
+
+    expect(document.css("img")).to be_empty
+    expect(document.text).to include(comment)
+  end
+
   it "handles multiple [roll] BBCode in a single post" do
     post = Fabricate(:post, raw: <<~MD)
       Here are some rolls:
@@ -37,6 +49,24 @@ RSpec.describe "Rollmaster BBCode integration", type: :integration do
     expect(rolls.size).to eq(3)
     expect(rolls.map(&:raw)).to contain_exactly("1d20", "3d8+2", "4d6kh3")
     rolls.each { |roll| expect(cpp.html).to include("data-roll-id=\"#{roll.id}\"") }
+  end
+
+  it "preserves duplicate notation roll order across edits" do
+    post = Fabricate(:post, raw: '[roll="First"]1d6[/roll]' + "\n" + '[roll="Second"]1d6[/roll]')
+    process_post(post)
+    original_roll_ids =
+      ::Rollmaster::Roll.where(post_id: post.id).order(:created_at, :id).pluck(:id)
+
+    post.raw = '[roll="Updated first"]1d6[/roll]' + "\n" + '[roll="Updated second"]1d6[/roll]'
+    post.save
+    cpp = process_post(post)
+    roll_ids =
+      Nokogiri::HTML5
+        .fragment(cpp.html)
+        .css(".bb-rollmaster")
+        .map { |element| element["data-roll-id"].to_i }
+
+    expect(roll_ids).to eq(original_roll_ids)
   end
 
   it "reuses existing rolls when a post is edited" do
@@ -66,7 +96,29 @@ RSpec.describe "Rollmaster BBCode integration", type: :integration do
     rolls.each { |roll| expect(cpp.html).to include("data-roll-id=\"#{roll.id}\"") }
   end
 
-  it "keeps prior rolls in history when a later edit rerolls the same notation" do
+  it "preserves the result when editing a roll description" do
+    user = Fabricate(:user)
+    post = Fabricate(:post, user: user, raw: '[roll="Initial description"]{4d6+2d8-3d30}d3[/roll]')
+    process_post(post)
+    initial_roll = ::Rollmaster::Roll.find_by!(post_id: post.id)
+    initial_result = initial_roll.result
+
+    SiteSetting.editing_grace_period = 0
+    PostRevisor.new(post).revise!(
+      user,
+      { raw: '[roll="Updated description"]{4d6+2d8-3d30}d3[/roll]', edit_reason: "update roll" },
+    )
+
+    rolls = ::Rollmaster::Roll.where(post_id: post.id)
+
+    expect(rolls).to contain_exactly(initial_roll)
+    expect(initial_roll.reload).to have_attributes(
+      desc: "Updated description",
+      result: initial_result,
+    )
+  end
+
+  it "reuses a roll when a later edit restores its formatted notation" do
     post = Fabricate(:post, raw: <<~MD)
       Initial roll: [roll]1d6[/roll]
     MD
@@ -88,15 +140,13 @@ RSpec.describe "Rollmaster BBCode integration", type: :integration do
     MD
     post.save
 
-    rerolled_cpp = process_post(post)
+    restored_cpp = process_post(post)
 
     rolls = ::Rollmaster::Roll.where(post_id: post.id).order(:created_at, :id)
-    rerolled_roll = rolls.last
 
-    expect(rolls.map(&:raw)).to eq(%w[1d6 1d8 1d6])
-    expect(rerolled_roll.id).not_to eq(initial_roll.id)
-    expect(post.reload.current_roll_ids).to eq([rerolled_roll.id])
-    expect(rerolled_cpp.html).to include("data-roll-id=\"#{rerolled_roll.id}\"")
+    expect(rolls.map(&:raw)).to eq(%w[1d6 1d8])
+    expect(post.reload.current_roll_ids).to eq([initial_roll.id])
+    expect(restored_cpp.html).to include("data-roll-id=\"#{initial_roll.id}\"")
   end
 
   def process_post(post)

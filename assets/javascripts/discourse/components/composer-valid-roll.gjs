@@ -88,21 +88,15 @@ export default class ComposerValidRoll extends Component {
     rollEls.forEach((el) => {
       /** @type string */
       const notation = el.getAttribute(NOTE_ATTR);
-      const rolls = notation
-        .split("\n")
-        .map((r) => r.trim())
-        .filter(Boolean);
-      rolls.forEach((roll) => {
-        try {
-          // TODO: Handle descriptions separately. parser won't be able to handle 2d20+4 // test
-          // see https://github.com/dice-roller/rpg-dice-roller/issues/287
-          rpgDiceRoller.Parser.parse(roll);
-        } catch (err) {
-          this.errors.push(err);
-          // eslint-disable-next-line no-console
-          console.warn("Rollmaster: Error parsing notation", roll, err);
-        }
-      });
+      try {
+        // TODO: Handle descriptions separately. parser won't be able to handle 2d20+4 // test
+        // see https://github.com/dice-roller/rpg-dice-roller/issues/287
+        rpgDiceRoller.Parser.parse(notation);
+      } catch (err) {
+        this.errors.push(err);
+        // eslint-disable-next-line no-console
+        console.warn("Rollmaster: Error parsing notation", notation, err);
+      }
     });
   }
 
