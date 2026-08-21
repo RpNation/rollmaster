@@ -2,9 +2,9 @@ import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
 import { cancel } from "@ember/runloop";
-import DButton from "discourse/components/d-button";
 import discourseLater from "discourse/lib/later";
 import { clipboardCopy } from "discourse/lib/utilities";
+import DButton from "discourse/ui-kit/d-button";
 import dAgeWithTooltip from "discourse/ui-kit/helpers/d-age-with-tooltip";
 import dConcatClass from "discourse/ui-kit/helpers/d-concat-class";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
@@ -54,7 +54,9 @@ export default class RollHistoryEntry extends Component {
         </span>
         <span class="bb-rollmaster-notation">{{@roll.notation}}</span>
         <span class="rollmaster-roll-history__title-meta">
-          {{#unless @roll.isCurrent}}
+          {{#if @roll.isCurrent}}
+            <span class="sr-only">{{i18n "rollmaster.post.current"}}</span>
+          {{else}}
             <span
               class="rollmaster-roll-history__historical-indicator"
               aria-label={{i18n "rollmaster.post.historical_tooltip"}}
@@ -63,9 +65,7 @@ export default class RollHistoryEntry extends Component {
               {{dIcon "far-eye-slash"}}
               <span class="sr-only">{{i18n "rollmaster.post.historical"}}</span>
             </span>
-          {{else}}
-            <span class="sr-only">{{i18n "rollmaster.post.current"}}</span>
-          {{/unless}}
+          {{/if}}
           <span class="rollmaster-roll-history__timestamp">
             {{dAgeWithTooltip @roll.created_at}}
           </span>
@@ -74,7 +74,7 @@ export default class RollHistoryEntry extends Component {
       <div class="rollmaster-roll-history__result-row">
         <p class="bb-rollmaster-results">{{@roll.result}}</p>
         <DButton
-          @class="btn-flat btn-small"
+          class="btn-flat btn-small"
           @action={{this.copyBBCode}}
           @icon={{if this.copied "check" "copy"}}
           @title={{if
