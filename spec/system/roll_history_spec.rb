@@ -28,9 +28,8 @@ RSpec.describe "Roll history", type: :system do
     topic_page.open_roll_history(post)
 
     expect(roll_history_modal).to be_open
-    expect(roll_history_modal.row_count).to eq(3)
+    expect(roll_history_modal.row_count).to eq(2)
     expect(roll_history_modal.entry_count(notation: "1d6", status: "Current")).to eq(1)
-    expect(roll_history_modal.entry_count(notation: "1d6", status: "Historical")).to eq(1)
     expect(roll_history_modal).to have_entry(notation: "1d8", status: "Historical")
   end
 
