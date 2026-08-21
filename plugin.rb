@@ -18,7 +18,6 @@ module ::Rollmaster
 end
 
 require_relative "lib/rollmaster/engine"
-require_relative "lib/rollmaster/roll_history"
 
 after_initialize do
   # Code which should run after Rails has finished booting
@@ -43,12 +42,6 @@ after_initialize do
   add_to_serializer(:post, :rolls, include_condition: -> { object.has_rolls? }) do
     (object.rolls || []).map { |roll| ::Rollmaster::RollSerializer.new(roll, root: false) }
   end
-
-  add_to_serializer(
-    :post_revision,
-    :roll_changes,
-    include_condition: -> { roll_changes.present? },
-  ) { ::Rollmaster::RollHistory.roll_changes(previous["cooked"], current["cooked"]) }
 
   # TODO: consider :chat_message_processed as well
 end

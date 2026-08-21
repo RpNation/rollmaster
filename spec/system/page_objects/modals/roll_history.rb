@@ -14,10 +14,9 @@ module PageObjects
       end
 
       def entry_count(notation:, status:)
-        rows.count do |row|
-          row_text = row.text
-          row_text.include?(notation) && row_text.include?(status)
-        end
+        body
+          .all("[data-test-roll-history-row][data-test-roll-history-status='#{status.downcase}']")
+          .count { |row| row.text.include?(notation) }
       end
 
       private

@@ -10,11 +10,9 @@ en:
         title: "View roll history"
         current: "Current"
         historical: "Historical"
-        notation: "Notation"
-        result: "Result"
+        historical_tooltip: "Not in the current post"
+        copy: "Copy BBCode"
+        copied: "Copied!"
         empty: "No rolls have been saved for this post."
-      revisions:
-        title: "Rolls"
-        empty: "No rolls"
       bbcode:
         default: "Roll"

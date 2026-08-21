@@ -4,8 +4,8 @@ import { fn } from "@ember/helper";
 import { action } from "@ember/object";
 import DButton from "discourse/components/d-button";
 import DModal from "discourse/components/d-modal";
-import dConcatClass from "discourse/ui-kit/helpers/d-concat-class";
 import { i18n } from "discourse-i18n";
+import RollHistoryEntry from "./roll-history-entry";
 
 export default class RollsPostMenuButton extends Component {
   static hidden() {
@@ -27,20 +27,8 @@ export default class RollsPostMenuButton extends Component {
       )
       .map((roll) => ({
         ...roll,
-        formattedCreatedAt: this.formatTimestamp(roll.created_at),
         isCurrent: this.currentRollIds.has(Number(roll.id)),
       }));
-  }
-
-  formatTimestamp(timestamp) {
-    if (!timestamp) {
-      return "";
-    }
-
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(timestamp));
   }
 
   @action
@@ -66,49 +54,7 @@ export default class RollsPostMenuButton extends Component {
       >
         <div class="rollmaster-roll-history" data-test-roll-history>
           {{#each this.rolls as |roll|}}
-            <article
-              class="rollmaster-roll-history__entry"
-              data-test-roll-history-row
-            >
-              <div class="rollmaster-roll-history__entry-header">
-                <span
-                  class={{dConcatClass
-                    "rollmaster-roll-history__status"
-                    (if roll.isCurrent "--current" "--historical")
-                  }}
-                  data-test-roll-history-status
-                >
-                  {{if
-                    roll.isCurrent
-                    (i18n "rollmaster.post.current")
-                    (i18n "rollmaster.post.historical")
-                  }}
-                </span>
-                <time
-                  class="rollmaster-roll-history__timestamp"
-                  datetime={{roll.created_at}}
-                >
-                  {{roll.formattedCreatedAt}}
-                </time>
-              </div>
-
-              {{#if roll.desc}}
-                <p class="rollmaster-roll-history__description">
-                  {{roll.desc}}
-                </p>
-              {{/if}}
-
-              <dl class="rollmaster-roll-history__details">
-                <div class="rollmaster-roll-history__detail">
-                  <dt>{{i18n "rollmaster.post.notation"}}</dt>
-                  <dd data-test-roll-history-notation>{{roll.notation}}</dd>
-                </div>
-                <div class="rollmaster-roll-history__detail">
-                  <dt>{{i18n "rollmaster.post.result"}}</dt>
-                  <dd data-test-roll-history-result>{{roll.result}}</dd>
-                </div>
-              </dl>
-            </article>
+            <RollHistoryEntry @roll={{roll}} />
           {{else}}
             <p
               class="rollmaster-roll-history__empty"
