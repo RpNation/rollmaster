@@ -1,32 +1,93 @@
-.rollmaster-valid-composer {
-  display: block;
-  position: absolute;
-  right: 0.125em;
-  bottom: 0em;
-  padding: 0.125em;
+.bb-rollmaster-result {
+  .bb-rollmaster-title {
+    color: var(--primary-high-or-secondary-low);
+    margin-bottom: 0.25em;
+    font-size: var(--font-down-1);
 
-  svg.svg-roll {
-    --success-mild: color-mix(
-      in srgb,
-      var(--success-medium),
-      rgb(140, 140, 140)
-    );
-    color: var(--success-mild, --success-medium);
-    &:has(~ .rollmaster-spinner) {
-      color: var(--primary-low-mid);
+    .d-icon {
+      display: inline-block;
+      font-size: var(--font-0-rem);
+      margin: auto 0;
+      margin-inline-end: 0.25em;
     }
+  }
 
-    &:has(+ .roll__invalid) {
+  .bb-rollmaster-results {
+    margin-top: 0.25em;
+    font-family: var(--d-font-family--monospace);
+  }
+
+  &.--error {
+    .bb-rollmaster-results {
       color: var(--danger);
     }
   }
+}
 
-  svg.roll__invalid {
-    color: var(--danger);
+// Modal
+.rollmaster-roll-history-modal {
+  .d-modal__body {
+    max-height: min(70vh, 40rem);
+    overflow-y: auto;
   }
 }
 
-.rollmaster-spinner {
-  animation: rotate-forever 1s infinite linear;
-  color: var(--primary-low-mid);
+.rollmaster-roll-history {
+  display: flex;
+  flex-direction: column;
+}
+
+.rollmaster-roll-history__empty {
+  margin: 0;
+  color: var(--primary-medium);
+}
+
+.rollmaster-roll-history__roll {
+  .bb-rollmaster-title {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+  }
+
+  &.--historical {
+    opacity: 0.65;
+  }
+}
+
+.rollmaster-roll-history__title-meta {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.rollmaster-roll-history__historical-indicator {
+  display: flex;
+  align-items: center;
+  color: var(--primary-medium);
+}
+
+.rollmaster-roll-history__timestamp {
+  color: var(--primary-medium);
+  cursor: pointer;
+}
+
+.rollmaster-roll-history__result-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .bb-rollmaster-results {
+    flex: 1;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .btn {
+    margin-inline-start: auto;
+    flex-shrink: 0;
+    padding: 0.15em;
+  }
 }

@@ -6,9 +6,13 @@ en:
           rollmaster: "Rollmaster"
   js:
     rollmaster:
+      post:
+        title: "View roll history"
+        current: "Current"
+        historical: "Historical"
+        historical_tooltip: "Not in the current post"
+        copy: "Copy BBCode"
+        copied: "Copied!"
+        empty: "No rolls have been saved for this post."
       bbcode:
-        placeholder: "Rolling: "
-      validator:
-        loading: "validating roll notation..."
-        success: "all roll notations valid"
-        error: "invalid roll notation found"
+        default: "Roll"

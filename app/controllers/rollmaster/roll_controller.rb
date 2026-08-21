@@ -16,5 +16,17 @@ module ::Rollmaster
         raise Discourse::InvalidParameters, e.message
       end
     end
+
+    # GET /rollmaster/rolls/:post_id
+    # @param [Integer] post_id the ID of the post to get rolls for
+    # @return [Array<Hash>] rolls array of rolls associated with the post
+    # @example URL /rollmaster/rolls/123
+    def rolls
+      post_id = params[:post_id]
+      raise Discourse::InvalidParameters, "post_id is required" if post_id.blank?
+
+      rolls = ::Rollmaster::Roll.where(post_id: post_id)
+      render_serialized(rolls, Rollmaster::RollSerializer, root: "rolls")
+    end
   end
 end

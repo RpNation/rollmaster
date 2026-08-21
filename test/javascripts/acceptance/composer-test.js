@@ -1,7 +1,6 @@
-import { click, fillIn, visit } from "@ember/test-helpers";
+import { click, fillIn, visit, waitUntil } from "@ember/test-helpers";
 import { test } from "qunit";
 import { acceptance } from "discourse/tests/helpers/qunit-helpers";
-import { i18n } from "discourse-i18n";
 
 acceptance("Rollmaster - composer", function (needs) {
   needs.user();
@@ -12,48 +11,63 @@ acceptance("Rollmaster - composer", function (needs) {
     allow_uncategorized_topics: true,
   });
 
-  test("bbcode [roll] is rendered", async function (assert) {
+  test("bbcode [roll] renders a blockquote in preview", async function (assert) {
     await visit("/");
     await click("#create-topic");
 
     await fillIn(".d-editor-input", "hello world");
-
     assert.dom(".d-editor-preview").hasText("hello world");
-
-    await fillIn(".d-editor-input", "[roll]test[/roll]");
-
-    assert
-      .dom(".d-editor-preview .bb-rollmaster")
-      .hasAttribute("data-notation", "test");
 
     await fillIn(".d-editor-input", "[roll]2d20[/roll]");
 
     assert
-      .dom(".d-editor-preview .bb-rollmaster")
-      .hasAttribute("data-notation", "2d20");
+      .dom(".d-editor-preview blockquote.bb-rollmaster-result")
+      .hasAttribute("data-notation", "2d20", "blockquote has data-notation");
+    assert
+      .dom(".d-editor-preview .bb-rollmaster-results")
+      .hasText("???", "results show placeholder before validation");
   });
 
-  test("[roll] notation is validated", async function (assert) {
+  test("[roll] valid notation does not show error state", async function (assert) {
     await visit("/");
     await click("#create-topic");
 
-    await fillIn(".d-editor-input", "hello world");
-
-    assert.dom(".d-editor-preview").hasText("hello world");
-    assert.dom(".rollmaster-valid-composer").doesNotExist();
-
     await fillIn(".d-editor-input", "[roll]2d20[/roll]");
 
-    assert.dom(".rollmaster-valid-composer").exists();
+    await waitUntil(
+      () =>
+        !document
+          .querySelector(
+            ".d-editor-preview blockquote.bb-rollmaster-result:not(.--error) .bb-rollmaster-results"
+          )
+          ?.textContent.includes("???") ||
+        document.querySelector(
+          ".d-editor-preview blockquote.bb-rollmaster-result"
+        ),
+      { timeout: 5000 }
+    );
+
     assert
-      .dom(".rollmaster-valid-composer")
-      .hasAttribute("title", i18n("rollmaster.validator.success"));
+      .dom(".d-editor-preview blockquote.bb-rollmaster-result")
+      .doesNotHaveClass("--error", "valid notation has no error state");
+  });
+
+  test("[roll] invalid notation shows error state", async function (assert) {
+    await visit("/");
+    await click("#create-topic");
 
     await fillIn(".d-editor-input", "[roll]junk[/roll]");
-    assert.dom(".rollmaster-valid-composer").exists();
+
+    await waitUntil(
+      () =>
+        document.querySelector(
+          ".d-editor-preview blockquote.bb-rollmaster-result.--error"
+        ),
+      { timeout: 5000 }
+    );
+
     assert
-      .dom(".rollmaster-valid-composer")
-      .hasAttribute("title", i18n("rollmaster.validator.error"));
-    assert.dom(".rollmaster-valid-composer .roll__invalid").exists();
+      .dom(".d-editor-preview blockquote.bb-rollmaster-result")
+      .hasClass("--error", "invalid notation shows error state");
   });
 });
