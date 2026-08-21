@@ -4,10 +4,6 @@ module ::Rollmaster
   class RollHistory
     SELECTOR_QUERY = ".bb-rollmaster[data-roll-id]".freeze
 
-    def self.current_roll_ids(cooked)
-      roll_entries(cooked).map { |entry| entry[:id] }
-    end
-
     def self.roll_changes(previous_cooked, current_cooked)
       previous_rolls = roll_entries(previous_cooked)
       current_rolls = roll_entries(current_cooked)

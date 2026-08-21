@@ -38,11 +38,9 @@ after_initialize do
   add_to_class(:post, :rolls) do
     ::Rollmaster::Roll.where(post_id: id).order(created_at: :desc, id: :desc) if has_rolls?
   end
-  add_to_class(:post, :current_roll_ids) { ::Rollmaster::RollHistory.current_roll_ids(cooked) }
 
   add_to_serializer(:post, :has_rolls?) { object.has_rolls? }
-  add_to_serializer(:post, :current_roll_ids) { object.current_roll_ids }
-  add_to_serializer(:post, :rolls) do
+  add_to_serializer(:post, :rolls, include_condition: -> { object.has_rolls? }) do
     (object.rolls || []).map { |roll| ::Rollmaster::RollSerializer.new(roll, root: false) }
   end
 

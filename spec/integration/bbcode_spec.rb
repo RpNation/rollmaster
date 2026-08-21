@@ -145,7 +145,6 @@ RSpec.describe "Rollmaster BBCode integration", type: :integration do
     rolls = ::Rollmaster::Roll.where(post_id: post.id).order(:created_at, :id)
 
     expect(rolls.map(&:raw)).to eq(%w[1d6 1d8])
-    expect(post.reload.current_roll_ids).to eq([initial_roll.id])
     expect(restored_cpp.html).to include("data-roll-id=\"#{initial_roll.id}\"")
   end
 

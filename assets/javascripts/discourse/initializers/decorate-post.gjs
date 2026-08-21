@@ -28,9 +28,14 @@ function decorateCookedElement(el, helper) {
     return;
   }
 
-  const rolls = helper.getModel().rolls;
+  const model = helper.getModel();
+  const rolls = model.rolls;
   const rollElems = el.querySelectorAll(
     ".bb-rollmaster[data-notation][data-roll-id]"
+  );
+
+  model.current_roll_ids = [...rollElems].map((e) =>
+    Number(e.getAttribute("data-roll-id"))
   );
 
   rollElems.forEach((rollElem) => {
