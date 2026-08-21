@@ -17,9 +17,4 @@ en:
         title: "Rolls"
         empty: "No rolls"
       bbcode:
-        placeholder: "Rolling: "
         default: "Roll"
-      validator:
-        loading: "Validating roll notation..."
-        success: "All roll notations are valid"
-        error: "Invalid roll notation found"

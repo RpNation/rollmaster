@@ -63,7 +63,7 @@ RSpec.describe "Rollmaster BBCode integration", type: :integration do
     roll_ids =
       Nokogiri::HTML5
         .fragment(cpp.html)
-        .css(".bb-rollmaster")
+        .css("blockquote.bb-rollmaster-result")
         .map { |element| element["data-roll-id"].to_i }
 
     expect(roll_ids).to eq(original_roll_ids)

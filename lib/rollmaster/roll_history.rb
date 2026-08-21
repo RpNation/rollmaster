@@ -2,7 +2,7 @@
 
 module ::Rollmaster
   class RollHistory
-    SELECTOR_QUERY = ".bb-rollmaster[data-roll-id]".freeze
+    SELECTOR_QUERY = "blockquote.bb-rollmaster-result[data-roll-id]".freeze
 
     def self.roll_changes(previous_cooked, current_cooked)
       previous_rolls = roll_entries(previous_cooked)

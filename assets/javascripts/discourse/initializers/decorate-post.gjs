@@ -1,60 +1,60 @@
+import { iconElement } from "discourse/lib/icon-library";
+import loadscript from "discourse/lib/load-script";
 import { withPluginApi } from "discourse/lib/plugin-api";
-import dIcon from "discourse/ui-kit/helpers/d-icon";
-import { i18n } from "discourse-i18n";
 import RollsPostMenuButton from "../components/rolls-post-menu-button";
 
-const RollResult = <template>
-  <blockquote
-    class="bb-rollmaster-result"
-    dir="auto"
-    data-roll-id={{@roll.id}}
-    data-desc={{@roll.desc}}
-    data-notation={{@roll.notation}}
-    data-result={{@roll.result}}
-  >
-    <p class="bb-rollmaster-title">
-      <span class="bb-rollmaster-description">
-        {{dIcon "rollmaster-dices"}}
-        {{@roll.desc}}:
-      </span>
-      <span class="bb-rollmaster-notation">{{@roll.notation}}</span>
-    </p>
-    <p class="bb-rollmaster-results">{{@roll.result}}</p>
-  </blockquote>
-</template>;
+/* global rpgDiceRoller */
+
+const SAVED_SELECTOR = "blockquote.bb-rollmaster-result[data-roll-id]";
+const PENDING_SELECTOR = "blockquote.bb-rollmaster-result:not([data-roll-id])";
+
+async function loadRpgDiceRoller() {
+  await Promise.all([
+    loadscript("/plugins/rollmaster/vendors/math.js"),
+    loadscript("/plugins/rollmaster/vendors/random-js.min.js"),
+  ]);
+  await loadscript("/plugins/rollmaster/vendors/rpg-dice-roller.min.js");
+}
 
 function decorateCookedElement(el, helper) {
-  if (!helper?.getModel()?.has_rolls) {
+  const model = helper?.getModel();
+
+  if (model?.has_rolls) {
+    const savedElems = el.querySelectorAll(SAVED_SELECTOR);
+    model.current_roll_ids = [...savedElems].map((e) =>
+      Number(e.getAttribute("data-roll-id"))
+    );
+  }
+
+  const pendingElems = el.querySelectorAll(PENDING_SELECTOR);
+  if (!pendingElems.length) {
     return;
   }
 
-  const model = helper.getModel();
-  const rolls = model.rolls;
-  const rollElems = el.querySelectorAll(
-    ".bb-rollmaster[data-notation][data-roll-id]"
-  );
-
-  model.current_roll_ids = [...rollElems].map((e) =>
-    Number(e.getAttribute("data-roll-id"))
-  );
-
-  rollElems.forEach((rollElem) => {
-    const rollId = rollElem.getAttribute("data-roll-id");
-    const roll = rolls.find((r) => r.id.toString() === rollId);
-    if (!roll) {
-      return;
+  pendingElems.forEach((blockquote) => {
+    const descEl = blockquote.querySelector(".bb-rollmaster-description");
+    if (descEl && !descEl.querySelector(".d-icon")) {
+      descEl.prepend(iconElement("rollmaster-dices"));
     }
+  });
 
-    roll.desc ??= i18n("rollmaster.bbcode.default");
+  loadRpgDiceRoller().then(() => {
+    pendingElems.forEach((blockquote) => {
+      const notation = blockquote.getAttribute("data-notation");
+      const resultsEl = blockquote.querySelector(".bb-rollmaster-results");
+      if (!notation || !resultsEl) {
+        return;
+      }
 
-    // full replacement of the roll element with a glimmer component
-    const wrapper = document.createElement("div");
-    wrapper.classList.add("bb-rollmaster-wrapper");
-    helper.renderGlimmer(
-      wrapper,
-      <template><RollResult @roll={{roll}} /></template>
-    );
-    rollElem.replaceWith(wrapper);
+      try {
+        rpgDiceRoller.Parser.parse(notation);
+        resultsEl.textContent = "???";
+        blockquote.classList.remove("--error");
+      } catch (err) {
+        resultsEl.textContent = err.message;
+        blockquote.classList.add("--error");
+      }
+    });
   });
 }
 

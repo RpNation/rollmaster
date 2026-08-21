@@ -4,6 +4,7 @@ import { fn } from "@ember/helper";
 import { action } from "@ember/object";
 import DButton from "discourse/components/d-button";
 import DModal from "discourse/components/d-modal";
+import dConcatClass from "discourse/ui-kit/helpers/d-concat-class";
 import { i18n } from "discourse-i18n";
 
 export default class RollsPostMenuButton extends Component {
@@ -71,10 +72,9 @@ export default class RollsPostMenuButton extends Component {
             >
               <div class="rollmaster-roll-history__entry-header">
                 <span
-                  class={{if
-                    roll.isCurrent
-                    "rollmaster-roll-history__status rollmaster-roll-history__status--current"
-                    "rollmaster-roll-history__status rollmaster-roll-history__status--historical"
+                  class={{dConcatClass
+                    "rollmaster-roll-history__status"
+                    (if roll.isCurrent "--current" "--historical")
                   }}
                   data-test-roll-history-status
                 >

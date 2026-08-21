@@ -1,20 +1,17 @@
 # frozen_string_literal: true
 
 module ::Rollmaster
-  SELECTOR_QUERY = ".bb-rollmaster[data-notation]"
+  SELECTOR_QUERY = "blockquote.bb-rollmaster-result[data-notation]:not([data-roll-id])"
 
   class HandleCookedPostProcess
     def self.process(doc, post)
-      # Add your processing logic here
-
       roll_elements =
         doc
           .css(SELECTOR_QUERY)
           .filter_map do |roll_element|
-            notation = roll_element.attribute("data-notation").value
+            notation = roll_element.attribute("data-notation")&.value
             next if notation.blank?
 
-            roll_element.content = ""
             { raw: notation, dom: roll_element, desc: roll_element.attribute("data-desc")&.value }
           end
 
@@ -26,8 +23,19 @@ module ::Rollmaster
       save_rolls(roll_elements, post)
 
       roll_elements.each do |roll|
-        roll[:dom].content = roll[:error] ? roll[:raw] : "#{roll[:raw]}: #{roll[:result]}"
-        roll[:dom]["data-roll-id"] = roll[:id] if roll[:id]
+        result_el = roll[:dom].at_css(".bb-rollmaster-results")
+        desc_el = roll[:dom].at_css(".bb-rollmaster-description")
+
+        svg = SvgSprite.raw_svg("rollmaster-dices")
+        desc_el.prepend_child(Nokogiri::HTML5.fragment(svg)) if desc_el && svg.present?
+
+        if roll[:error]
+          roll[:dom]["class"] = "#{roll[:dom]["class"]} --error"
+          result_el&.content = roll[:result]
+        else
+          roll[:dom]["data-roll-id"] = roll[:id].to_s if roll[:id]
+          result_el&.content = roll[:result]
+        end
       end
 
       true
