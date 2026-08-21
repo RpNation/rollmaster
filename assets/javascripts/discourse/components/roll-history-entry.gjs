@@ -47,24 +47,34 @@ export default class RollHistoryEntry extends Component {
       }}
       ...attributes
     >
-      <div class="rollmaster-roll-history__roll-controls">
-        {{#unless @roll.isCurrent}}
-          <span
-            class="rollmaster-roll-history__historical-indicator"
-            aria-label={{i18n "rollmaster.post.historical_tooltip"}}
-            title={{i18n "rollmaster.post.historical_tooltip"}}
-          >
-            {{dIcon "far-eye-slash"}}
-            <span class="sr-only">{{i18n "rollmaster.post.historical"}}</span>
-          </span>
-        {{else}}
-          <span class="sr-only">{{i18n "rollmaster.post.current"}}</span>
-        {{/unless}}
-        <span class="rollmaster-roll-history__timestamp">
-          {{dAgeWithTooltip @roll.created_at}}
+      <p class="bb-rollmaster-title">
+        <span class="bb-rollmaster-description">
+          {{dIcon "rollmaster-dices"}}
+          {{if @roll.desc @roll.desc (i18n "rollmaster.bbcode.default")}}:
         </span>
+        <span class="bb-rollmaster-notation">{{@roll.notation}}</span>
+        <span class="rollmaster-roll-history__title-meta">
+          {{#unless @roll.isCurrent}}
+            <span
+              class="rollmaster-roll-history__historical-indicator"
+              aria-label={{i18n "rollmaster.post.historical_tooltip"}}
+              title={{i18n "rollmaster.post.historical_tooltip"}}
+            >
+              {{dIcon "far-eye-slash"}}
+              <span class="sr-only">{{i18n "rollmaster.post.historical"}}</span>
+            </span>
+          {{else}}
+            <span class="sr-only">{{i18n "rollmaster.post.current"}}</span>
+          {{/unless}}
+          <span class="rollmaster-roll-history__timestamp">
+            {{dAgeWithTooltip @roll.created_at}}
+          </span>
+        </span>
+      </p>
+      <div class="rollmaster-roll-history__result-row">
+        <p class="bb-rollmaster-results">{{@roll.result}}</p>
         <DButton
-          @class="btn-flat"
+          @class="btn-flat btn-small"
           @action={{this.copyBBCode}}
           @icon={{if this.copied "check" "copy"}}
           @title={{if
@@ -75,15 +85,6 @@ export default class RollHistoryEntry extends Component {
           data-test-copy-bbcode
         />
       </div>
-
-      <p class="bb-rollmaster-title">
-        <span class="bb-rollmaster-description">
-          {{dIcon "rollmaster-dices"}}
-          {{if @roll.desc @roll.desc (i18n "rollmaster.bbcode.default")}}:
-        </span>
-        <span class="bb-rollmaster-notation">{{@roll.notation}}</span>
-      </p>
-      <p class="bb-rollmaster-results">{{@roll.result}}</p>
     </blockquote>
   </template>
 }

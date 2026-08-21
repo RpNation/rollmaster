@@ -23,7 +23,7 @@ export default class RollsPostMenuButton extends Component {
   get rolls() {
     return [...(this.args.post.rolls || [])]
       .sort(
-        (left, right) => new Date(right.created_at) - new Date(left.created_at)
+        (left, right) => new Date(left.created_at) - new Date(right.created_at)
       )
       .map((roll) => ({
         ...roll,

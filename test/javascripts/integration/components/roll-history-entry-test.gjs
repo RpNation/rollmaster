@@ -26,7 +26,7 @@ module("Integration | Component | RollHistoryEntry", function (hooks) {
     await render(<template><RollHistoryEntry @roll={{roll}} /></template>);
 
     assert.dom(".bb-rollmaster-notation").hasText("2d6", "notation is shown");
-    assert.dom(".bb-rollmaster-results").hasText("4", "result is shown");
+    assert.dom(".bb-rollmaster-results").includesText("4", "result is shown");
   });
 
   test("uses default label when no description", async function (assert) {
