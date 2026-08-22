@@ -2,7 +2,10 @@ import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { fn } from "@ember/helper";
 import { action } from "@ember/object";
+import { ajax } from "discourse/lib/ajax";
+import { popupAjaxError } from "discourse/lib/ajax-error";
 import DButton from "discourse/ui-kit/d-button";
+import DConditionalLoadingSpinner from "discourse/ui-kit/d-conditional-loading-spinner";
 import DModal from "discourse/ui-kit/d-modal";
 import { i18n } from "discourse-i18n";
 import RollHistoryEntry from "./roll-history-entry";
@@ -13,6 +16,8 @@ export default class RollsPostMenuButton extends Component {
   }
 
   @tracked modalIsOpen = false;
+  @tracked loading = false;
+  @tracked rolls = [];
 
   get currentRollIds() {
     return new Set(
@@ -20,8 +25,8 @@ export default class RollsPostMenuButton extends Component {
     );
   }
 
-  get rolls() {
-    return [...(this.args.post.rolls || [])]
+  get sortedRolls() {
+    return [...this.rolls]
       .sort(
         (left, right) => new Date(left.created_at) - new Date(right.created_at)
       )
@@ -32,8 +37,20 @@ export default class RollsPostMenuButton extends Component {
   }
 
   @action
-  showRolls() {
+  async showRolls() {
     this.modalIsOpen = true;
+    this.loading = true;
+
+    try {
+      const response = await ajax(
+        `/rollmaster/rolls/${this.args.post.id}.json`
+      );
+      this.rolls = response.rolls;
+    } catch (error) {
+      popupAjaxError(error);
+    } finally {
+      this.loading = false;
+    }
   }
 
   <template>
@@ -52,18 +69,20 @@ export default class RollsPostMenuButton extends Component {
         @title={{i18n "rollmaster.post.title"}}
         @closeModal={{fn (mut this.modalIsOpen) false}}
       >
-        <div class="rollmaster-roll-history" data-test-roll-history>
-          {{#each this.rolls as |roll|}}
-            <RollHistoryEntry @roll={{roll}} />
-          {{else}}
-            <p
-              class="rollmaster-roll-history__empty"
-              data-test-roll-history-empty
-            >
-              {{i18n "rollmaster.post.empty"}}
-            </p>
-          {{/each}}
-        </div>
+        <DConditionalLoadingSpinner @condition={{this.loading}}>
+          <div class="rollmaster-roll-history" data-test-roll-history>
+            {{#each this.sortedRolls as |roll|}}
+              <RollHistoryEntry @roll={{roll}} />
+            {{else}}
+              <p
+                class="rollmaster-roll-history__empty"
+                data-test-roll-history-empty
+              >
+                {{i18n "rollmaster.post.empty"}}
+              </p>
+            {{/each}}
+          </div>
+        </DConditionalLoadingSpinner>
       </DModal>
     {{/if}}
   </template>

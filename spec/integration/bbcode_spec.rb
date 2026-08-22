@@ -148,6 +148,102 @@ RSpec.describe "Rollmaster BBCode integration", type: :integration do
     expect(restored_cpp.html).to include("data-roll-id=\"#{initial_roll.id}\"")
   end
 
+  it "renders an error and saves no roll when a notation parses but cannot be rolled" do
+    post = Fabricate(:post, raw: "[roll]1d1r[/roll]")
+    post.save
+
+    cpp = process_post(post)
+    roll_element = Nokogiri::HTML5.fragment(cpp.html).at_css("blockquote.bb-rollmaster-result")
+
+    expect(::Rollmaster::Roll.where(post_id: post.id)).to be_empty
+    expect(roll_element["data-roll-id"]).to be_nil
+    expect(roll_element["class"]).to include("--error")
+    expect(roll_element.at_css(".bb-rollmaster-results").text).to include("re-roll")
+    expect(post.reload.has_rolls?).to be(false)
+  end
+
+  it "keeps has_rolls? set once a roll has been made, even if a later edit only errors" do
+    post = Fabricate(:post, raw: "[roll]2d6[/roll]")
+    post.save
+    process_post(post)
+    original_roll = ::Rollmaster::Roll.find_by!(post_id: post.id)
+
+    post.raw = "[roll]1d1r[/roll]"
+    post.save
+    process_post(post)
+
+    expect(::Rollmaster::Roll.where(post_id: post.id)).to contain_exactly(original_roll)
+    expect(post.reload.has_rolls?).to be(true)
+  end
+
+  it "renders a generic error and saves no roll when the engine fails while rolling" do
+    allow(::Rollmaster::DiceEngine).to receive(:roll).and_raise(
+      MiniRacer::ScriptTerminatedError,
+      "script terminated",
+    )
+
+    post = Fabricate(:post, raw: "[roll]2d6[/roll]")
+    post.save
+
+    cpp = process_post(post)
+    roll_element = Nokogiri::HTML5.fragment(cpp.html).at_css("blockquote.bb-rollmaster-result")
+
+    expect(::Rollmaster::Roll.where(post_id: post.id)).to be_empty
+    expect(roll_element["class"]).to include("--error")
+    expect(roll_element.at_css(".bb-rollmaster-results").text).to eq(
+      I18n.t("rollmaster.engine_error"),
+    )
+    expect(post.reload.has_rolls?).to be(false)
+  end
+
+  it "renders a generic error and saves no roll when the engine fails while formatting" do
+    allow(::Rollmaster::DiceEngine).to receive(:format_notation).and_raise(
+      MiniRacer::ScriptTerminatedError,
+      "script terminated",
+    )
+
+    post = Fabricate(:post, raw: "[roll]2d6[/roll]")
+    post.save
+
+    cpp = process_post(post)
+    roll_element = Nokogiri::HTML5.fragment(cpp.html).at_css("blockquote.bb-rollmaster-result")
+
+    expect(::Rollmaster::Roll.where(post_id: post.id)).to be_empty
+    expect(roll_element["class"]).to include("--error")
+    expect(roll_element.at_css(".bb-rollmaster-results").text).to eq(
+      I18n.t("rollmaster.engine_error"),
+    )
+  end
+
+  it "does not re-roll a notation that was matched to an existing roll" do
+    post = Fabricate(:post, raw: "[roll]2d6[/roll]")
+    post.save
+    process_post(post)
+
+    allow(::Rollmaster::DiceEngine).to receive(:format_notation).and_call_original
+    allow(::Rollmaster::DiceEngine).to receive(:roll)
+
+    post.raw = '[roll="now with a description"]2d6[/roll]'
+    post.save
+    process_post(post)
+
+    expect(::Rollmaster::DiceEngine).to have_received(:format_notation).once
+    expect(::Rollmaster::DiceEngine).not_to have_received(:roll)
+  end
+
+  it "keeps rolling the remaining rolls when one of them fails" do
+    post = Fabricate(:post, raw: "[roll]1d1r[/roll]\n[roll]2d6[/roll]")
+    post.save
+
+    cpp = process_post(post)
+    elements = Nokogiri::HTML5.fragment(cpp.html).css("blockquote.bb-rollmaster-result")
+    saved_roll = ::Rollmaster::Roll.find_by!(post_id: post.id)
+
+    expect(saved_roll.raw).to eq("2d6")
+    expect(elements.first["class"]).to include("--error")
+    expect(elements.last["data-roll-id"]).to eq(saved_roll.id.to_s)
+  end
+
   def process_post(post)
     cpp = CookedPostProcessor.new(post)
     cpp.post_process

@@ -17,9 +17,9 @@ module ::Rollmaster
 
       return if roll_elements.empty?
 
-      roll_elements.each { |element| element.merge!(process_roll(element[:raw], post)) }
-
+      format_rolls(roll_elements, post)
       match_rolls(roll_elements, post) if post.id?
+      roll_unmatched(roll_elements, post)
       save_rolls(roll_elements, post)
 
       roll_elements.each do |roll|
@@ -41,14 +41,57 @@ module ::Rollmaster
       true
     end
 
-    def self.process_roll(notation, post)
-      begin
-        formatted = Rollmaster::DiceEngine.format_notation(notation).first
-        final = Rollmaster::DiceEngine.roll(notation).first
-        { error: false, formatted: formatted, result: final }
-      rescue Rollmaster::DiceEngine::RollError => e
-        Rails.logger.warn("Rollmaster: Error formatting notation for post #{post.id}: #{e.message}")
-        { error: true, formatted: nil, result: e.message }
+    def self.format_rolls(rolls, post)
+      apply_batch(
+        rolls,
+        rolls.map { |roll| roll[:raw] },
+        :format_notation,
+        "formatting",
+        post,
+      ) { |roll, value| roll[:formatted] = value }
+    end
+
+    # Only rolls elements that survived formatting and weren't matched to an existing roll
+    def self.roll_unmatched(rolls, post)
+      unmatched = rolls.reject { |roll| roll[:error] || roll[:id] }
+      return if unmatched.empty?
+
+      apply_batch(
+        unmatched,
+        unmatched.map { |roll| roll[:raw] },
+        :roll,
+        "rolling",
+        post,
+      ) { |roll, value| roll[:result] = value }
+    end
+
+    # Calls a DiceEngine method as a batch, and applies the results to the rolls.
+    def self.apply_batch(rolls, notations, method, action, post)
+      results =
+        begin
+          Rollmaster::DiceEngine.public_send(method, *notations)
+        rescue MiniRacer::Error => e
+          Rails.logger.error(
+            "Rollmaster: Dice engine failure while #{action} notations for post #{post.id}: #{e.class}: #{e.message}",
+          )
+          nil
+        end
+
+      rolls.each_with_index do |roll, index|
+        result = results && results[index]
+
+        if result.nil?
+          roll[:error] = true
+          roll[:result] = I18n.t("rollmaster.engine_error")
+        elsif result["ok"]
+          yield roll, result["value"]
+        else
+          Rails.logger.warn(
+            "Rollmaster: Invalid notation while #{action} for post #{post.id}: #{result["msg"]}",
+          )
+          roll[:error] = true
+          roll[:result] = result["msg"]
+        end
       end
     end
 
@@ -69,29 +112,32 @@ module ::Rollmaster
     end
 
     def self.save_rolls(rolls, post)
+      successful_rolls = rolls.reject { |r| r[:error] }
+
+      successful_rolls.each do |roll|
+        if roll[:id]
+          existing_roll = Rollmaster::Roll.find(roll[:id])
+          if existing_roll.raw != roll[:raw] || existing_roll.notation != roll[:formatted] ||
+               existing_roll.desc != roll[:desc]
+            existing_roll.update!(raw: roll[:raw], notation: roll[:formatted], desc: roll[:desc])
+          end
+        else
+          new_roll =
+            Rollmaster::Roll.create!(
+              post_id: post.id,
+              raw: roll[:raw],
+              notation: roll[:formatted],
+              result: roll[:result],
+              desc: roll[:desc],
+            )
+          roll[:id] = new_roll.id
+        end
+      end
+
+      return if successful_rolls.empty?
+
       post.custom_fields[::Rollmaster::POST_CUSTOM_FIELD] = true
       post.save_custom_fields
-      rolls
-        .reject { |r| r[:error] }
-        .each do |roll|
-          if roll[:id]
-            existing_roll = Rollmaster::Roll.find(roll[:id])
-            if existing_roll.raw != roll[:raw] || existing_roll.notation != roll[:formatted] ||
-                 existing_roll.desc != roll[:desc]
-              existing_roll.update!(raw: roll[:raw], notation: roll[:formatted], desc: roll[:desc])
-            end
-          else
-            new_roll =
-              Rollmaster::Roll.create!(
-                post_id: post.id,
-                raw: roll[:raw],
-                notation: roll[:formatted],
-                result: roll[:result],
-                desc: roll[:desc],
-              )
-            roll[:id] = new_roll.id
-          end
-        end
     end
   end
 end

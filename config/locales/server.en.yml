@@ -1,3 +1,5 @@
 en:
+  rollmaster:
+    engine_error: "The dice engine could not complete this roll."
   site_settings:
     rollmaster_enabled: "Enable Rollmaster"

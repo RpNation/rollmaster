@@ -4,9 +4,6 @@ require "mini_racer"
 
 module ::Rollmaster
   class DiceEngine
-    class RollError < StandardError
-    end
-
     @mutex = Mutex.new
     @ctx_init = Mutex.new
     @ctx = nil
@@ -17,69 +14,52 @@ module ::Rollmaster
       rval
     end
 
-    def self.roll(*diceRolls)
-      result = nil
+    # One V8 call for the whole set of notations. A bad notation only fails its own entry
+    # instead of the whole call. Each element of the returned array is either
+    # {"ok" => true, "value" => ...} or {"ok" => false, "name" => ..., "msg" => ...}, in the
+    # same order as notations.
+    def self.roll(*notations)
       protect do
         context = v8
-        result = context.call("roll", *diceRolls)
+        context.call("roll", *notations)
       end
-      if result.is_a?(Hash) && result["type"] == "error"
-        raise Rollmaster::DiceEngine::RollError.new(result["msg"])
-      end
-      result
     end
 
-    # Formats the notation of the dice rolls.
+    # Formats the notation of the dice rolls (see #roll for the return shape).
     # Note: this does not actually reorder the dice rolls, it just formats them by removing
     # whitespace and ensuring the notation is valid.
-    def self.format_notation(*diceRolls)
-      result = nil
+    def self.format_notation(*notations)
       protect do
         context = v8
-        result = context.call("formatNotation", *diceRolls)
+        context.call("formatNotation", *notations)
       end
-      if result.is_a?(Hash) && result["type"] == "error"
-        raise Rollmaster::DiceEngine::RollError.new(result["msg"])
-      end
-      result
     end
 
     def self.attach_function(ctx)
       ctx.eval <<~JS
-        function roll(...diceRolls) {
-          const roller = new rpgDiceRoller.DiceRoller;
-          try {
-            roller.roll(...diceRolls);
-            return roller.log.map((r) => {
-              const output = r.output;
-              const start = output.lastIndexOf(': ');
-              return output.substring(start + 2);
-            });
-          } catch (e) {
-            return {
-              type: "error",
-              name: e.name,
-              msg: e.message,
-            };
-          }
+        function mapResults(notations, fn) {
+          return notations.map((notation) => {
+            try {
+              return { ok: true, value: fn(notation) };
+            } catch (e) {
+              return { ok: false, name: e.name, msg: e.message };
+            }
+          });
         }
 
-        function formatNotation(...diceRolls) {
+        function roll(...notations) {
+          return mapResults(notations, (notation) => {
+            const roller = new rpgDiceRoller.DiceRoller;
+            roller.roll(notation);
+            const output = roller.log[0].output;
+            const start = output.lastIndexOf(': ');
+            return output.substring(start + 2);
+          });
+        }
+
+        function formatNotation(...notations) {
           const parse = rpgDiceRoller.Parser.parse;
-          const formatted = [];
-          try {
-            diceRolls.forEach((notation) => {
-              const parsed = parse(notation);
-              formatted.push(format(parsed));
-            });
-          } catch (e) {
-            return {
-              type: "error",
-              name: e.name,
-              msg: e.message,
-            };
-          }
-          return formatted;
+          return mapResults(notations, (notation) => format(parse(notation)));
         }
 
         function format(expressions) {
