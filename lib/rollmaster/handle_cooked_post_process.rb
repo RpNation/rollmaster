@@ -71,9 +71,14 @@ module ::Rollmaster
         begin
           Rollmaster::DiceEngine.public_send(method, *notations)
         rescue MiniRacer::Error => e
-          Rails.logger.error(
-            "Rollmaster: Dice engine failure while #{action} notations for post #{post.id}: #{e.class}: #{e.message}",
+          Discourse.warn_exception(
+            e,
+            message:
+              "Rollmaster: Dice engine failure while #{action} notations for post #{post.id}",
           )
+          # The engine may be left in a bad state (e.g. after hitting the memory limit), so make
+          # sure the next roll gets a fresh context instead of continuing to fail.
+          Rollmaster::DiceEngine.reset_context
           nil
         end
 

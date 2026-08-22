@@ -176,11 +176,12 @@ RSpec.describe "Rollmaster BBCode integration", type: :integration do
     expect(post.reload.has_rolls?).to be(true)
   end
 
-  it "renders a generic error and saves no roll when the engine fails while rolling" do
+  it "renders a generic error, saves no roll, and resets the engine when it fails while rolling" do
     allow(::Rollmaster::DiceEngine).to receive(:roll).and_raise(
       MiniRacer::ScriptTerminatedError,
       "script terminated",
     )
+    allow(::Rollmaster::DiceEngine).to receive(:reset_context).and_call_original
 
     post = Fabricate(:post, raw: "[roll]2d6[/roll]")
     post.save
@@ -194,13 +195,15 @@ RSpec.describe "Rollmaster BBCode integration", type: :integration do
       I18n.t("rollmaster.engine_error"),
     )
     expect(post.reload.has_rolls?).to be(false)
+    expect(::Rollmaster::DiceEngine).to have_received(:reset_context)
   end
 
-  it "renders a generic error and saves no roll when the engine fails while formatting" do
+  it "renders a generic error, saves no roll, and resets the engine when it fails while formatting" do
     allow(::Rollmaster::DiceEngine).to receive(:format_notation).and_raise(
       MiniRacer::ScriptTerminatedError,
       "script terminated",
     )
+    allow(::Rollmaster::DiceEngine).to receive(:reset_context).and_call_original
 
     post = Fabricate(:post, raw: "[roll]2d6[/roll]")
     post.save
@@ -213,6 +216,7 @@ RSpec.describe "Rollmaster BBCode integration", type: :integration do
     expect(roll_element.at_css(".bb-rollmaster-results").text).to eq(
       I18n.t("rollmaster.engine_error"),
     )
+    expect(::Rollmaster::DiceEngine).to have_received(:reset_context)
   end
 
   it "does not re-roll a notation that was matched to an existing roll" do
