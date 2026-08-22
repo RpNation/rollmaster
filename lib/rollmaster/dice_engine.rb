@@ -89,10 +89,12 @@ module ::Rollmaster
     end
 
     def self.create_context
-      # Create a new v8 context. Not exactly happy with starting a new v8 context, but we don't
-      # want to share the context between threads. Similarly, no auto disposal mechanism, so we
-      # just need to hope the improved user experience is worth the memory usage.
-      ctx = MiniRacer::Context.new(timeout: 25_000, ensure_gc_after_idle: 2000)
+      ctx =
+        MiniRacer::Context.new(
+          timeout: 25_000,
+          ensure_gc_after_idle: 2000,
+          max_memory: SiteSetting.rollmaster_dice_engine_max_memory_mb.megabytes,
+        )
 
       ctx.eval("window = globalThis; window.devicePixelRatio = 2;") # hack to make code think stuff is retina
 

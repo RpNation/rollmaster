@@ -4,18 +4,6 @@ module ::Rollmaster
   class RollController < ::ApplicationController
     requires_plugin PLUGIN_NAME
 
-    # GET /rollmaster/roll
-    # @param [Array<String>] diceRolls array of dice rolls to be
-    # @return [Hash] result array of per-notation results, each either
-    #   {"ok" => true, "value" => ...} or {"ok" => false, "name" => ..., "msg" => ...}
-    # @example URL /rollmaster/roll?diceRolls[]=2d6&diceRolls[]=1d20
-    def roll
-      raise Discourse::InvalidParameters, "diceRolls is required" if params[:diceRolls].blank?
-
-      result = ::Rollmaster::DiceEngine.roll(*params[:diceRolls])
-      render json: { result: result }
-    end
-
     # GET /rollmaster/rolls/:post_id
     # @param [Integer] post_id the ID of the post to get rolls for
     # @return [Array<Hash>] rolls array of rolls associated with the post

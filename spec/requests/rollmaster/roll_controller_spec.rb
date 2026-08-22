@@ -47,35 +47,4 @@ RSpec.describe Rollmaster::RollController, type: :request do
       expect(response.status).to eq(404)
     end
   end
-
-  describe "GET /rollmaster/roll" do
-    let(:endpoint) { "/rollmaster/roll.json" }
-
-    context "when valid dice rolls are provided" do
-      it "returns an ok result per notation" do
-        get "/rollmaster/roll.json", params: { diceRolls: %w[2d6 1d20] }
-        expect(response).to have_http_status(:ok)
-        result = response.parsed_body["result"]
-        expect(result.size).to eq(2)
-        expect(result).to all(include("ok" => true))
-      end
-    end
-
-    context "when no dice rolls are provided" do
-      it "raises an invalid parameters error" do
-        get "/rollmaster/roll.json"
-        expect(response.status).to eq(400)
-      end
-    end
-
-    context "when an invalid dice roll is provided" do
-      it "returns a non-ok result for that notation instead of failing the request" do
-        get "/rollmaster/roll.json", params: { diceRolls: ["invalid"] }
-        expect(response).to have_http_status(:ok)
-        result = response.parsed_body["result"]
-        expect(result.size).to eq(1)
-        expect(result.first["ok"]).to eq(false)
-      end
-    end
-  end
 end

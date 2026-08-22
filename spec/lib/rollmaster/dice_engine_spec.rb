@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-RSpec.configure { |c| c.filter_run_when_matching :focus }
-
 RSpec.describe Rollmaster::DiceEngine do
   describe ".roll" do
     it "returns a per-notation ok result for multiple dice rolls" do
@@ -45,6 +43,25 @@ RSpec.describe Rollmaster::DiceEngine do
       result = described_class.format_notation("invalid_notation")
 
       expect(result.first["ok"]).to eq(false)
+    end
+  end
+
+  describe "rollmaster_dice_engine_max_memory_mb" do
+    before { described_class.reset_context }
+    after { described_class.reset_context }
+
+    it "aborts a notation whose evaluation exceeds the configured limit" do
+      adversarial_notation = Array.new(800) { "999d6" }.join("+")
+
+      expect { described_class.roll(adversarial_notation) }.to raise_error(
+        MiniRacer::V8OutOfMemoryError,
+      )
+    end
+
+    it "still allows a large, legitimate roll within the configured limit" do
+      result = described_class.roll("20d6+20d6")
+
+      expect(result.first["ok"]).to eq(true)
     end
   end
 

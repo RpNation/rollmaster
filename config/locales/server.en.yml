@@ -3,3 +3,4 @@ en:
     engine_error: "The dice engine could not complete this roll."
   site_settings:
     rollmaster_enabled: "Enable Rollmaster"
+    rollmaster_dice_engine_max_memory_mb: "Maximum heap size, in megabytes, the dice-rolling V8 engine is allowed to use."
