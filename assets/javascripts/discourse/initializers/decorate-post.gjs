@@ -47,7 +47,8 @@ function decorateCookedElement(el, helper) {
       }
 
       try {
-        rpgDiceRoller.Parser.parse(notation);
+        // Roll to match server-side behavior
+        new rpgDiceRoller.DiceRoller().roll(notation);
         resultsEl.textContent = "???";
         blockquote.classList.remove("--error");
       } catch (err) {

@@ -52,6 +52,29 @@ acceptance("Rollmaster - composer", function (needs) {
       .doesNotHaveClass("--error", "valid notation has no error state");
   });
 
+  test("[roll] notation that parses but cannot be rolled shows error state", async function (assert) {
+    await visit("/");
+    await click("#create-topic");
+
+    // "1d1r" is accepted by the parser but throws when actually rolled.
+    await fillIn(".d-editor-input", "[roll]1d1r[/roll]");
+
+    await waitUntil(
+      () =>
+        document.querySelector(
+          ".d-editor-preview blockquote.bb-rollmaster-result.--error"
+        ),
+      { timeout: 5000 }
+    );
+
+    assert
+      .dom(".d-editor-preview blockquote.bb-rollmaster-result")
+      .hasClass("--error", "unrollable notation shows error state");
+    assert
+      .dom(".d-editor-preview .bb-rollmaster-results")
+      .doesNotIncludeText("???", "the placeholder is replaced by the error");
+  });
+
   test("[roll] invalid notation shows error state", async function (assert) {
     await visit("/");
     await click("#create-topic");
