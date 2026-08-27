@@ -51,9 +51,7 @@ export const extension = {
   },
 
   parse: {
-    // `[roll]` can be inline as a QoL for markdown mode. A block-group node can't nest inside a
-    // paragraph's inline-only content, so when that happens: force-close the paragraph, and
-    // make the roll block a sibling
+    // QoL [roll] inline to block level.
     rollmaster_open(state) {
       if (state.top().type.name === "paragraph") {
         state.closeNode();
@@ -108,8 +106,7 @@ export const extension = {
         schema.nodes.roll.create(null, [descNode, notationNode])
       );
 
-      // A typed description is already filled in, so jump straight to the (empty) notation
-      // field; otherwise drop the caret into the description so the author fills top-down.
+      // move cursor to notation if desc is already populated
       const caret = desc ? start + descNode.nodeSize + 2 : start + 2;
       tr.setSelection(TextSelection.create(tr.doc, caret));
 
@@ -117,8 +114,6 @@ export const extension = {
     },
   }),
 
-  // Mirrors core's placeholder extension: decorate the empty description/notation fields with
-  // data-placeholder, which the stylesheet renders via ::before.
   plugins({
     pmState: { Plugin, PluginKey },
     pmView: { Decoration, DecorationSet },
@@ -157,8 +152,6 @@ export const extension = {
   commands: ({ schema, pmState: { TextSelection } }) => ({
     insertRoll() {
       return (state, dispatch) => {
-        // createAndFill supplies the empty description/notation fields, which render their
-        // placeholders until the author types.
         const roll = schema.nodes.roll.createAndFill();
 
         if (!roll) {
@@ -192,6 +185,18 @@ export const extension = {
           notation = child.textContent;
         }
       });
+
+      if (!notation) {
+        // The server rejects `[roll][/roll]` outright (empty notation isn't a roll), so writing
+        // the BBCode wrapper here would silently degrade to unparseable literal text the next
+        // time this is parsed (mode toggle, draft reload, paste). Fall back to plain text
+        // instead
+        if (desc) {
+          state.text(desc);
+          state.closeBlock(node);
+        }
+        return;
+      }
 
       state.write(desc ? `[roll="${escapeQuotes(desc)}"]` : "[roll]");
       state.write(notation);
