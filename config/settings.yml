@@ -2,3 +2,10 @@ plugins:
   rollmaster_enabled:
     default: true
     client: true
+
+  rollmaster_dice_engine_max_memory_mb:
+    default: 25
+    hidden: true
+    client: false
+    min: 10
+    max: 500

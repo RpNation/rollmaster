@@ -1,22 +1,37 @@
+import discourseDebounce from "discourse/lib/debounce";
 import { iconElement } from "discourse/lib/icon-library";
-import loadscript from "discourse/lib/load-script";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import RollsPostMenuButton from "../components/rolls-post-menu-button";
 
-/* global rpgDiceRoller */
-
 const SAVED_SELECTOR = "blockquote.bb-rollmaster-result[data-roll-id]";
 const PENDING_SELECTOR = "blockquote.bb-rollmaster-result:not([data-roll-id])";
+const VALIDATION_DELAY = 150;
 
-async function loadRpgDiceRoller() {
-  await Promise.all([
-    loadscript("/plugins/rollmaster/vendors/math.js"),
-    loadscript("/plugins/rollmaster/vendors/random-js.min.js"),
-  ]);
-  await loadscript("/plugins/rollmaster/vendors/rpg-dice-roller.min.js");
+function applyResult(blockquote, resultsEl, error) {
+  if (error) {
+    resultsEl.textContent = error;
+    blockquote.classList.add("--error");
+  } else {
+    resultsEl.textContent = "???";
+    blockquote.classList.remove("--error");
+  }
 }
 
-function decorateCookedElement(el, helper) {
+function validatePendingElems(diceEngine, pendingElems) {
+  pendingElems.forEach((blockquote) => {
+    const notation = blockquote.getAttribute("data-notation");
+    const resultsEl = blockquote.querySelector(".bb-rollmaster-results");
+    if (!notation || !resultsEl) {
+      return;
+    }
+
+    diceEngine
+      .validate(notation)
+      .then((error) => applyResult(blockquote, resultsEl, error));
+  });
+}
+
+function decorateCookedElement(diceEngine, el, helper) {
   const model = helper?.getModel();
 
   if (model?.has_rolls) {
@@ -31,38 +46,49 @@ function decorateCookedElement(el, helper) {
     return;
   }
 
+  let hasUncached = false;
+
   pendingElems.forEach((blockquote) => {
     const descEl = blockquote.querySelector(".bb-rollmaster-description");
     if (descEl && !descEl.querySelector(".d-icon")) {
       descEl.prepend(iconElement("rollmaster-dices"));
     }
+
+    // Every re-cook rebuilds this element from scratch. Fast track any cached validation
+    const notation = blockquote.getAttribute("data-notation");
+    const resultsEl = blockquote.querySelector(".bb-rollmaster-results");
+    if (notation && resultsEl) {
+      const cached = diceEngine.getCachedValidation(notation);
+      if (cached !== undefined) {
+        applyResult(blockquote, resultsEl, cached);
+      } else {
+        hasUncached = true;
+      }
+    }
   });
 
-  loadRpgDiceRoller().then(() => {
-    pendingElems.forEach((blockquote) => {
-      const notation = blockquote.getAttribute("data-notation");
-      const resultsEl = blockquote.querySelector(".bb-rollmaster-results");
-      if (!notation || !resultsEl) {
-        return;
-      }
+  if (!hasUncached) {
+    return;
+  }
 
-      try {
-        rpgDiceRoller.Parser.parse(notation);
-        resultsEl.textContent = "???";
-        blockquote.classList.remove("--error");
-      } catch (err) {
-        resultsEl.textContent = err.message;
-        blockquote.classList.add("--error");
-      }
-    });
-  });
+  discourseDebounce(
+    decorateCookedElement,
+    validatePendingElems,
+    diceEngine,
+    pendingElems,
+    VALIDATION_DELAY
+  );
 }
 
 export default {
   name: "rollmaster-decorate-post",
-  initialize() {
+  initialize(container) {
+    const diceEngine = container.lookup("service:rollmaster-dice-engine");
+
     withPluginApi((api) => {
-      api.decorateCookedElement(decorateCookedElement);
+      api.decorateCookedElement((el, helper) =>
+        decorateCookedElement(diceEngine, el, helper)
+      );
 
       api.registerValueTransformer(
         "post-menu-buttons",
