@@ -5,6 +5,8 @@ en:
         categories:
           rollmaster: "Rollmaster"
   js:
+    composer:
+      rollmaster_notation: ""
     rollmaster:
       post:
         title: "View roll history"
@@ -16,3 +18,7 @@ en:
         empty: "No rolls have been saved for this post."
       bbcode:
         default: "Roll"
+      composer:
+        insert_roll: "Dice roll"
+        description_placeholder: "Description (optional)"
+        notation_placeholder: "Dice notation, e.g. 2d6+3"

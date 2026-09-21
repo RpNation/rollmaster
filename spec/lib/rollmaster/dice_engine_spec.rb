@@ -1,54 +1,67 @@
 # frozen_string_literal: true
 
-RSpec.configure { |c| c.filter_run_when_matching :focus }
-
 RSpec.describe Rollmaster::DiceEngine do
   describe ".roll" do
-    it "executes a dice roll and returns the result" do
+    it "returns a per-notation ok result for multiple dice rolls" do
       dice_rolls = %w[2d6 1d20]
       result = described_class.roll(*dice_rolls)
 
-      expect(result).not_to be_nil
-      expect(result).to be_a(Array)
       expect(result.size).to eq(dice_rolls.size)
-      expect(result.all? { |r| r.is_a?(String) }).to be(true)
+      expect(result).to all(include("ok" => true, "value" => a_kind_of(String)))
     end
 
-    it "raises a RollError for invalid dice rolls" do
-      dice_rolls = ["invalid_roll"]
+    it "returns an error entry instead of raising for an invalid notation" do
+      result = described_class.roll("invalid_roll")
 
-      expect { described_class.roll(*dice_rolls) }.to raise_error(Rollmaster::DiceEngine::RollError)
+      expect(result.size).to eq(1)
+      expect(result.first["ok"]).to eq(false)
+      expect(result.first["msg"]).to be_present
     end
 
-    it "raises a RollError for empty dice rolls" do
-      dice_rolls = []
+    it "isolates a bad notation from the others in the same call" do
+      result = described_class.roll("2d6", "invalid_roll", "1d20")
 
-      expect { described_class.roll(*dice_rolls) }.to raise_error(Rollmaster::DiceEngine::RollError)
+      expect(result.map { |r| r["ok"] }).to eq([true, false, true])
     end
 
-    it "raises a RollError for nil dice rolls" do
-      dice_rolls = nil
-
-      expect { described_class.roll(*dice_rolls) }.to raise_error(Rollmaster::DiceEngine::RollError)
+    it "returns an empty array when no notations are given" do
+      expect(described_class.roll).to eq([])
     end
   end
 
   describe ".format_notation" do
     it "formats the notation of the dice rolls" do
       dice_rolls = ["{3d8  * 2, 20 /  2d10, 2d10 - d4}     // testing"]
-      formatted_result = described_class.format_notation(*dice_rolls)
+      result = described_class.format_notation(*dice_rolls)
 
-      expect(formatted_result).not_to be_nil
-      expect(formatted_result).to be_a(Array)
-      expect(formatted_result.first).to eq("{3d8*2, 20/2d10, 2d10-1d4}") # has stripped whitespace and comments
+      expect(result.size).to eq(1)
+      expect(result.first["ok"]).to eq(true)
+      expect(result.first["value"]).to eq("{3d8*2, 20/2d10, 2d10-1d4}") # has stripped whitespace and comments
     end
 
-    it "raises a RollError for invalid notation" do
-      dice_rolls = ["invalid_notation"]
+    it "returns an error entry instead of raising for an invalid notation" do
+      result = described_class.format_notation("invalid_notation")
 
-      expect { described_class.format_notation(*dice_rolls) }.to raise_error(
-        Rollmaster::DiceEngine::RollError,
+      expect(result.first["ok"]).to eq(false)
+    end
+  end
+
+  describe "rollmaster_dice_engine_max_memory_mb" do
+    before { described_class.reset_context }
+    after { described_class.reset_context }
+
+    it "aborts a notation whose evaluation exceeds the configured limit" do
+      adversarial_notation = Array.new(800) { "999d6" }.join("+")
+
+      expect { described_class.roll(adversarial_notation) }.to raise_error(
+        MiniRacer::V8OutOfMemoryError,
       )
+    end
+
+    it "still allows a large, legitimate roll within the configured limit" do
+      result = described_class.roll("20d6+20d6")
+
+      expect(result.first["ok"]).to eq(true)
     end
   end
 
