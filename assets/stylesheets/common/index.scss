@@ -1,30 +1,107 @@
-.bb-rollmaster-result {
-  .bb-rollmaster-title {
-    color: var(--primary-high-or-secondary-low);
-    margin-bottom: 0.25em;
-    font-size: var(--font-down-1);
+.bb-rollmaster-result,
+.composer-roll-node {
+  --rollmaster-accent: var(--tertiary);
+  --rollmaster-border: color-mix(
+    in srgb,
+    var(--rollmaster-accent) 30%,
+    var(--primary-low)
+  );
+  --rollmaster-surface: color-mix(
+    in srgb,
+    var(--rollmaster-accent) 6%,
+    var(--secondary)
+  );
+  position: relative;
+  box-sizing: border-box;
+  min-width: 0;
+  margin-block: 1em;
+  margin-inline: 0;
+  padding: 1em;
+  border: 1px solid var(--rollmaster-border);
+  border-inline-start: 3px solid var(--rollmaster-accent);
+  border-radius: var(--d-border-radius-large, 8px);
+  background: var(--rollmaster-surface);
+  color: var(--primary);
 
-    .d-icon {
-      display: inline-block;
+  &:not(.composer-roll-node) {
+    padding-inline-start: 4.25em;
+  }
+
+  .bb-rollmaster-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5em 0.75em;
+    margin: 0 0 0.625em;
+    color: var(--primary);
+    font-size: var(--font-down-1);
+    line-height: 1.5;
+
+    .bb-rollmaster-description {
+      min-width: 0;
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+
+    .bb-rollmaster-description > .d-icon {
+      position: absolute;
+      inset-block-start: 0.9em;
+      inset-inline-start: 0.9em;
+      box-sizing: content-box;
+      width: 1.25em;
+      height: 1.25em;
+      margin: 0;
+      padding: 0.5em;
+      border-radius: var(--d-border-radius, 6px);
+      background: color-mix(
+        in srgb,
+        var(--rollmaster-accent) 15%,
+        var(--secondary)
+      );
+      color: var(--rollmaster-accent);
       font-size: var(--font-0-rem);
-      margin: auto 0;
-      margin-inline-end: 0.25em;
+    }
+
+    .bb-rollmaster-notation {
+      min-width: 0;
+      max-width: 100%;
+      padding: 0.125em 0.625em;
+      border: 1px solid var(--rollmaster-border);
+      border-radius: 1em;
+      background: var(--secondary);
+      color: var(--primary);
+      font-family: var(--d-font-family--monospace);
+      overflow-wrap: anywhere;
     }
   }
 
   .bb-rollmaster-results {
-    margin-top: 0.25em;
+    min-width: 0;
+    margin: 0;
+    color: var(--primary);
     font-family: var(--d-font-family--monospace);
+    font-size: var(--font-up-2);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
   }
 
   &.--error {
+    --rollmaster-accent: var(--danger);
+
     .bb-rollmaster-results {
       color: var(--danger);
+      font-size: var(--font-0);
+      font-weight: normal;
     }
   }
 }
 
-// Modal
+.post-action-menu__view-rolls .d-icon {
+  color: var(--tertiary);
+}
+
 .rollmaster-roll-history-modal {
   .d-modal__body {
     max-height: min(70vh, 40rem);
@@ -35,6 +112,7 @@
 .rollmaster-roll-history {
   display: flex;
   flex-direction: column;
+  gap: 0.75em;
 }
 
 .rollmaster-roll-history__empty {
@@ -43,15 +121,10 @@
 }
 
 .rollmaster-roll-history__roll {
-  .bb-rollmaster-title {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    flex-wrap: wrap;
-  }
+  margin: 0;
 
   &.--historical {
-    opacity: 0.65;
+    --rollmaster-accent: var(--primary-medium);
   }
 }
 
@@ -94,13 +167,10 @@
 
 .composer-roll-node {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   column-gap: 0.5em;
   row-gap: 0.5em;
   padding: 0.75em;
-  border: 1px solid var(--primary-low);
-  border-radius: var(--d-border-radius);
-  background: var(--primary-very-low);
 }
 
 .composer-roll-node__icon,
@@ -110,12 +180,22 @@
 }
 
 .composer-roll-node__icon {
+  box-sizing: content-box;
   grid-column: 1;
   grid-row: 1 / -1;
   align-self: start;
-  margin-top: 0.5em;
-  color: var(--primary-medium);
-  font-size: var(--font-0-rem);
+  width: 1.25em;
+  height: 1.25em;
+  margin-top: 0.125em;
+  padding: 0.5em;
+  border-radius: var(--d-border-radius, 6px);
+  background: color-mix(
+    in srgb,
+    var(--rollmaster-accent) 15%,
+    var(--secondary)
+  );
+  color: var(--rollmaster-accent);
+  font-size: var(--font-up-1);
 }
 
 .composer-roll-node__title {
@@ -124,6 +204,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5em;
+  min-width: 0;
 
   // The description and notation fields.
   p {
@@ -133,6 +214,7 @@
     border: 1px solid var(--primary-low);
     border-radius: var(--d-border-radius);
     background: var(--secondary);
+    overflow-wrap: anywhere;
 
     &:first-child {
       margin-top: 0;
@@ -152,7 +234,9 @@
 .composer-roll-node__error {
   grid-column: 2;
   grid-row: 2;
+  min-width: 0;
   margin: 0.25em 0 0;
   color: var(--danger);
   font-size: var(--font-down-1);
+  overflow-wrap: anywhere;
 }
